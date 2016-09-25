@@ -11,8 +11,8 @@ var controller = Botkit.slackbot({
 });
 
 var bot = controller.spawn({
-    token: process.env.token
-}).startRTM();
+        token: process.env.token
+    }).startRTM();
 
 controller.setupWebserver(process.env.PORT, function(err, webserver) {
   controller.createWebhookEndpoints(controller.webserver);
@@ -21,7 +21,26 @@ controller.setupWebserver(process.env.PORT, function(err, webserver) {
 var games = {};
 
 controller.on('slash_command', function(bot, message){
-    bot.replyPrivate(message, 'I know it was you.');
+    switch (message.text){
+        case 'new':
+            operateOnUser(bot, message, function(err, res){
+                initializeGame(bot, message, res);
+            });
+            break;
+        case 'join':
+            operateOnUser(bot, message, function(err, res){ 
+                joinGame(bot, message, res); 
+            });
+            break;
+        case 'quit':
+            operateOnUser(bot, message, function(err, res){
+                quitGame(bot, message, res);
+            });
+            break;
+        case 'order':
+            reportTurnOrder(bot, message);
+            break;        
+    }    
 });
 
 controller.hears(['!uno'], ['ambient','direct_message','direct_mention'], function(bot, message){
