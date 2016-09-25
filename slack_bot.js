@@ -89,9 +89,10 @@ function beginGame(bot, message){
     bot.replyPublic(message, 'Game has started! Shuffling and dealing the hands.');
 
     //Create the deck
-    request('http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2').then(function(result){
-                console.log(result);
-                console.log(result.deck_id);
+    request({
+        uri: 'http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2'
+    }).then(function(result){
+                console.log(arguments);
                 game.deckId = result.deck_id;
                 console.log('deckId set to ' + game.deckId);
                 return game.deckId;
