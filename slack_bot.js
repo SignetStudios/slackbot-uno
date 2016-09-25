@@ -3,6 +3,8 @@ if (!process.env.token) {
     process.exit(1);
 }
 
+require('any-promise/register/q');
+
 var Botkit = require('./lib/Botkit.js'),
     os = require('os'),
     controller = Botkit.slackbot({
@@ -11,8 +13,8 @@ var Botkit = require('./lib/Botkit.js'),
     bot = controller.spawn({
         token: process.env.token
     }).startRTM(),
-    request = require('request-promise'),
-    Promise = require('bluebird');
+    Q = require('q'),
+    request = require('request-promise-any');
 
 controller.setupWebserver(process.env.PORT, function(err, webserver) {
   controller.createWebhookEndpoints(controller.webserver, 'PsRh1Hn3lbVjQpYtf3UaLwKH');
@@ -83,7 +85,6 @@ function beginGame(bot, message){
     }
 
     game.started = true;
-    var drawRequests = [];
 
     //Create the deck
     request('http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2').then(function(result){
@@ -93,38 +94,36 @@ function beginGame(bot, message){
                 console.log('Deck request finished');
                 return deckId;
             })
-        .then(function(deckId){
-                console.log('Deck request should be finished by now.');
-                console.log('DeckId = ' + deckId);
-                console.log(game);
+        .done();
 
-                game.deckId = deckId;
+    console.log('Deck request should be finished by now.');
+    console.log('DeckId = ' + deckId);
+    console.log(game);
 
-                for (playerName in game.players){
-                    var player = game.players[playerName];
-                    var drawRequest = request('http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=7')
-                            .then(function(result){
-                                console.log(result);
+    var drawRequests = [];
 
-                                for (var j = 0; j < result.cards.length; j++){
-                                    player.cards[j] = getUnoCard(result.cards[j]);
-                                }
-                            })
-                            .then(function(){
-                                console.log('Draw request finished');
-                            });
+    for (playerName in game.players){
+        var player = game.players[playerName];
+        var drawRequest = request('http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=7')
+                .then(function(result){
+                    console.log(result);
 
-                    drawRequests.push(drawRequest);                    
-                }
-            })
-        .then(function(){
-            Promise.all(drawRequests)
-                .then(function(){
-                    console.log('All draw requests should be finished by now.');
-                    console.log(game);
-                    announceTurn(bot, message);
+                    for (var j = 0; j < result.cards.length; j++){
+                        player.cards[j] = getUnoCard(result.cards[j]);
+                    }
                 })
-        });
+                .then(function(){
+                    console.log('Draw request finished');
+                });
+
+        drawRequests.push(drawRequest);                    
+    }
+
+    Q.allSettled(drawRequests).done();
+
+    console.log('All draw requests should be finished by now.');
+    console.log(game);
+    announceTurn(bot, message);
 }
 
 function getUnoCard(standardCard){
