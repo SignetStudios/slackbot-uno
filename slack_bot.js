@@ -21,6 +21,8 @@ controller.setupWebserver(process.env.PORT, function(err, webserver) {
 var games = {};
 
 controller.on('slash_command', function(bot, message){
+    console.log(message);
+
     switch (message.text){
         case 'new':
             operateOnUser(bot, message, function(err, res){
@@ -39,10 +41,22 @@ controller.on('slash_command', function(bot, message){
             break;
         case 'order':
             reportTurnOrder(bot, message);
-            break;        
+            break;
+        case 'setup':
+            for (var i = 2; i <= 5; i++){
+                var mockUser = {
+                    user: {
+                        name: 'Player' + i
+                    }
+                };
+
+                joinGame(bot, message, mockUser);
+            }
+            break;
     }    
 });
 
+/*
 controller.hears(['!uno'], ['ambient','direct_message','direct_mention'], function(bot, message){
     operateOnUser(bot, message, function(err, res){
         initializeGame(bot, message, res);
@@ -85,7 +99,7 @@ controller.hears(['!setup'], ['direct_message'], function(bot, message){
     }
 
 })
-
+*/
 function operateOnUser(bot, message, callback){
     bot.api.users.info({user: message.user}, callback);
 }
@@ -96,33 +110,31 @@ function quitGame(bot, message, apiUser){
         channel = message.channel;
 
     if (!game.players[user]){
-        bot.reply(message, 'No problem, ' + user + ', you weren\'t playing to begin with.');
+        bot.replyPrivate(message, 'No problem, ' + user + ', you weren\'t playing to begin with.');
         return;
     }
 
     delete game.players[user];
 
+    var player = game.turnOrder.indexOf(user);
+    game.turnOrder.splice(player, 1);
+
+    bot.replyPublic(message, user + ' has left the game.');
+
     if (Object.keys(game.players).length === 0){
-        bot.reply(message, 'No more players. Ending the game.');
+        bot.replyPublic(message, 'No more players. Ending the game.');
         games[channel] = newGame();
         return;
     }
 
-    console.log(Object.keys(game.players));
-
-    var player = game.turnOrder.indexOf(user);
-    game.turnOrder.splice(player, 1);
-
-    bot.reply(message, user + ' has left the game.');
-
     if (game.player1 === user){        
         game.player1 = Object.keys(game.players)[0];
-        bot.reply(message, game.player1 + ' is the new player 1.');        
+        bot.replyPublic(message, game.player1 + ' is the new player 1.');        
     }
 
     if (game.players.length === 1){
         game.started = false;
-        bot.reply(message, 'Only one player remaining. Waiting for more players.');        
+        bot.replyPublic(message, 'Only one player remaining. Waiting for more players.');        
     }
 
     reportTurnOrder(bot, message);
@@ -139,7 +151,7 @@ function joinGame(bot, message, apiUser){
     }
 
     if (game.players[user]){
-        bot.reply(message, user + ', you\'ve already joined the game!');
+        bot.replyPrivate(message, user + ', you\'ve already joined the game!');
         return;
     }
 
@@ -148,7 +160,7 @@ function joinGame(bot, message, apiUser){
     };
     game.turnOrder[game.turnOrder.length] = user;
 
-    bot.reply(message, user + ' has joined the game.');
+    bot.replyPublic(message, user + ' has joined the game.');
 
     reportTurnOrder(bot, message);
 }
@@ -159,7 +171,7 @@ function getGame(bot, message, suppressReport){
     if (!games[channel] || !games[channel].initialized){
         if (!suppressReport)
         {
-            bot.reply(message, 'There is no game yet.');
+            bot.replyPrivate(message, 'There is no game yet.');
         }
         return undefined;
     }
@@ -184,7 +196,7 @@ function reportTurnOrder(bot, message){
         currentOrder = currentOrder + '\n' + i + '. ' + game.turnOrder[i - 1]; 
     }
 
-    bot.reply(message, 'Current playing order:\n' + currentOrder);
+    bot.replyPrivate(message, 'Current playing order:\n' + currentOrder);
 }
 
 function initializeGame(bot, message, apiUser){
@@ -200,7 +212,7 @@ function initializeGame(bot, message, apiUser){
     }
 
     if (game.initialized){
-        bot.reply(message, 'There is already an uno game in progress. Type !join to join the game.');
+        bot.replyPrivate(message, 'There is already an uno game in progress. Type !join to join the game.');
         return;
     }
         
@@ -214,7 +226,7 @@ function initializeGame(bot, message, apiUser){
     };
     game.turnOrder[game.turnOrder.length] = user;
 
-    bot.reply(message, user + ' has started UNO. Type !join to join the game.');
+    bot.replyPublic(message, user + ' has started UNO. Type !join to join the game.');
 
     reportTurnOrder(bot, message);
 };
