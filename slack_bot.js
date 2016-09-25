@@ -14,6 +14,10 @@ var bot = controller.spawn({
     token: process.env.token
 }).startRTM();
 
+controller.setupWebserver(process.env.port, function(err, webserver) {
+  controller.createWebhookEndpoints(controller.webserver);
+});
+
 var games = {};
 
 controller.hears(['!uno'], ['ambient','direct_message','direct_mention'], function(bot, message){
