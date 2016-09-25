@@ -24,9 +24,9 @@ controller.on('slash_command', function(bot, message){
     console.log(message);
 
     switch (message.text){
-        case 'new':
+        /*case 'new':
             initializeGame(bot, message);
-            break;
+            break;*/
         case 'join':
             joinGame(bot, MessageEvent); 
             break;
@@ -49,6 +49,11 @@ controller.on('slash_command', function(bot, message){
             break;
     }    
 });
+
+controller.hears('new', 'slash_command, direct_mention, mention', function(bot, message){
+    console.log(message);
+    initializeGame(bot, message);
+})
 
 /*
 controller.hears(['!uno'], ['ambient','direct_message','direct_mention'], function(bot, message){
