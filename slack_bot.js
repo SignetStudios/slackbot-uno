@@ -86,14 +86,17 @@ function beginGame(bot, message){
 
     game.started = true;
 
+    bot.replyPublic(message, 'Game has started! Shuffling and dealing the hands.');
+
     //Create the deck
     request('http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2').then(function(result){
                 game.deckId = result.deck_id;
+                console.log('deckId set to ' + game.deck_id);
             })
         .then(function(){
                 console.log('Deck request finished');
             })
-        .done();
+        .resolve();
 
     console.log('Deck request should be finished by now.');
     console.log('DeckId = ' + game.deckId);
@@ -156,7 +159,7 @@ function getStandardCard(unoCard){
 function announceTurn(bot, message){
     var game = getGame(bot, message);
 
-    bot.replyPublic(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType \\uno cards, \\uno draw, \\uno skip or \\uno play.')
+    bot.replyPublicDelayed(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType \\uno cards, \\uno draw, \\uno skip or \\uno play.')
 }
 
 function quitGame(bot, message){
