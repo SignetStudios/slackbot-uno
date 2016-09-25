@@ -7,7 +7,7 @@ var Botkit = require('./lib/Botkit.js');
 var os = require('os');
 
 var controller = Botkit.slackbot({
-    debug: true
+    //debug: true
 });
 
 var bot = controller.spawn({
@@ -20,27 +20,29 @@ controller.setupWebserver(process.env.PORT, function(err, webserver) {
 
 var games = {};
 
-controller.hears('new', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
+//TODO: Allow for commands via @mentions as well
+
+controller.hears('new', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
     console.log(message);
     initializeGame(bot, message);
 });
 
-controller.hears('join', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
+controller.hears('join', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
     console.log(message);
     joinGame(bot, message);
 });
 
-controller.hears('quit', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
+controller.hears('quit', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
     console.log(message);
     quitGame(bot, message);
 });
 
-controller.hears('order', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
+controller.hears('order', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
     console.log(message);
     reportTurnOrder(bot, message, true);
 });
 
-controller.hears('setup', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
+controller.hears('setup', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
     console.log(message);
     for (var i = 2; i <= 5; i++){
         var mockUser = 'Player' + i;
@@ -49,13 +51,53 @@ controller.hears('setup', ['slash_command', 'direct_mention', 'mention'], functi
     }
 });
 
+controller.hears('start', ['slash_command'], function(bot, message){
+    console.log(message);
+    beginGame(bot, message);
+});
+
+function beginGame(bot, message){
+    var user = message.user_name,
+        game = getGame(bot, message);
+
+    if (!game){
+        return;
+    }
+
+    if (game.player1 !== user){
+        bot.replyPrivate(message, 'Only player 1 (' + game.player1 + ') can start the game.');
+        return;
+    }
+
+    if (game.players.length < 2){
+        bot.replyPrivate(message, 'You need at least two players to begin playing.');
+        return;
+    }
+
+    if (game.started){
+        bot.replyPrivate(message, 'The game is already started.');
+        reportTurnOrder(bot, message, true, true);
+        return;
+    }
+
+    game.started = true;
+
+    announceTurn(bot, message);
+}
+
+function announceTurn(bot, message){
+    var game = getGame(bot, message);
+
+    bot.replyPublic(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType \\uno cards, \\uno draw, \\uno skip or \\uno play.')
+}
+
 function quitGame(bot, message){
     var user = message.user_name,
         game = getGame(bot, message),
         channel = message.channel;
 
     if (!game.players[user]){
-        bot.replyPrivate(message, 'No problem, you weren\'t playing to begin with.');
+        bot.replyPrivate(message, 'You weren\'t playing to begin with.');
         return;
     }
 
@@ -124,7 +166,7 @@ function getGame(bot, message, suppressReport){
     return games[channel];
 }
 
-function reportTurnOrder(bot, message, isPrivate){
+function reportTurnOrder(bot, message, isPrivate, isDelayed){
     var game = getGame(bot, message);
 
     if (!game){
@@ -142,7 +184,11 @@ function reportTurnOrder(bot, message, isPrivate){
     }
 
     if (isPrivate){
-        bot.replyPrivate(message, 'Current playing order:\n' + currentOrder);
+        if (isDelayed){
+            bot.replyPrivateDelayed(message, 'Current playing order:\n' + currentOrder);
+        } else{
+            bot.replyPrivate(message, 'Current playing order:\n' + currentOrder);
+        }        
     }
     else{
         bot.replyPublicDelayed(message, 'Current playing order:\n' + currentOrder);
@@ -190,120 +236,6 @@ function newGame(){
         turnOrder: []
     };
 }
-
-/*
-controller.hears(['hello', 'hi'], 'direct_message,direct_mention,mention', function(bot, message) {
-
-    bot.api.reactions.add({
-        timestamp: message.ts,
-        channel: message.channel,
-        name: 'robot_face',
-    }, function(err, res) {
-        if (err) {
-            bot.botkit.log('Failed to add emoji reaction :(', err);
-        }
-    });
-
-
-    controller.storage.users.get(message.user, function(err, user) {
-        if (user && user.name) {
-            bot.reply(message, 'Hello ' + user.name + '!!');
-        } else {
-            bot.reply(message, 'Hello.');
-        }
-    });
-});
-
-controller.hears(['call me (.*)', 'my name is (.*)'], 'direct_message,direct_mention,mention', function(bot, message) {
-    var name = message.match[1];
-    controller.storage.users.get(message.user, function(err, user) {
-        if (!user) {
-            user = {
-                id: message.user,
-            };
-        }
-        user.name = name;
-        controller.storage.users.save(user, function(err, id) {
-            bot.reply(message, 'Got it. I will call you ' + user.name + ' from now on.');
-        });
-    });
-});
-
-controller.hears(['what is my name', 'who am i'], 'direct_message,direct_mention,mention', function(bot, message) {
-
-    controller.storage.users.get(message.user, function(err, user) {
-        if (user && user.name) {
-            bot.reply(message, 'Your name is ' + user.name);
-        } else {
-            bot.startConversation(message, function(err, convo) {
-                if (!err) {
-                    convo.say('I do not know your name yet!');
-                    convo.ask('What should I call you?', function(response, convo) {
-                        convo.ask('You want me to call you `' + response.text + '`?', [
-                            {
-                                pattern: 'yes',
-                                callback: function(response, convo) {
-                                    // since no further messages are queued after this,
-                                    // the conversation will end naturally with status == 'completed'
-                                    convo.next();
-                                }
-                            },
-                            {
-                                pattern: 'no',
-                                callback: function(response, convo) {
-                                    // stop the conversation. this will cause it to end with status == 'stopped'
-                                    convo.stop();
-                                }
-                            },
-                            {
-                                default: true,
-                                callback: function(response, convo) {
-                                    convo.repeat();
-                                    convo.next();
-                                }
-                            }
-                        ]);
-
-                        convo.next();
-
-                    }, {'key': 'nickname'}); // store the results in a field called nickname
-
-                    convo.on('end', function(convo) {
-                        if (convo.status == 'completed') {
-                            bot.reply(message, 'OK! I will update my dossier...');
-
-                            controller.storage.users.get(message.user, function(err, user) {
-                                if (!user) {
-                                    user = {
-                                        id: message.user,
-                                    };
-                                }
-                                user.name = convo.extractResponse('nickname');
-                                controller.storage.users.save(user, function(err, id) {
-                                    bot.reply(message, 'Got it. I will call you ' + user.name + ' from now on.');
-                                });
-                            });
-
-
-
-                        } else {
-                            // this happens if the conversation ended prematurely for some reason
-                            bot.reply(message, 'OK, nevermind!');
-                        }
-                    });
-                }
-            });
-        }
-    });
-});
-
-*/
-controller.hears(['shutdown'], 'direct_message,direct_mention,mention', function(bot, message) {
-    setTimeout(function() {
-        process.exit();
-    }, 3000);
-});
-
 
 controller.hears(['uptime', 'identify yourself', 'who are you', 'what is your name'],
     'direct_message,direct_mention,mention', function(bot, message) {
