@@ -20,85 +20,34 @@ controller.setupWebserver(process.env.PORT, function(err, webserver) {
 
 var games = {};
 
-controller.on('slash_command', function(bot, message){
-    console.log(message);
-
-    switch (message.text){
-        /*case 'new':
-            initializeGame(bot, message);
-            break;*/
-        case 'join':
-            joinGame(bot, MessageEvent); 
-            break;
-        case 'quit':
-            quitGame(bot, message);
-            break;
-        case 'order':
-            reportTurnOrder(bot, message, true);
-            break;
-        case 'setup':
-            for (var i = 2; i <= 5; i++){
-                var mockUser = {
-                    user: {
-                        name: 'Player' + i
-                    }
-                };
-
-                joinGame(bot, message, mockUser);
-            }
-            break;
-    }    
-});
-
-controller.hears('new', 'slash_command, direct_mention, mention', function(bot, message){
+controller.hears('new', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
     console.log(message);
     initializeGame(bot, message);
-})
-
-/*
-controller.hears(['!uno'], ['ambient','direct_message','direct_mention'], function(bot, message){
-    operateOnUser(bot, message, function(err, res){
-        initializeGame(bot, message, res);
-    });
 });
 
-controller.hears(['lets play'], ['direct_mention', 'mention'], function(bot, message){
-    operateOnUser(bot, message, function(err, res){
-        initializeGame(bot, message, res);
-    });
-});
-
-controller.hears(['!join', 'I\'ll play'], ['ambient', 'direct_message', 'direct_mention'], function(bot, message){
-    operateOnUser(bot, message, function(err, res){ 
-        joinGame(bot, message, res); 
-    });
-});
-
-controller.hears(['!quit'], ['ambient','direct_message','direct_mention'], function(bot, message){
-    operateOnUser(bot, message, function(err, res){
-        quitGame(bot, message, res);
-    })
-});
-
-controller.hears(['!playOrder'], ['ambient','direct_message','direct_mention'], function(bot, message){
-    reportTurnOrder(bot, message);
-});
-
-controller.hears(['!setup'], ['direct_message'], function(bot, message){
+controller.hears('join', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
     console.log(message);
+    joinGame(bot, message);
+});
 
+controller.hears('quit', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
+    console.log(message);
+    quitGame(bot, message);
+});
+
+controller.hears('order', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
+    console.log(message);
+    reportTurnOrder(bot, message, true);
+});
+
+controller.hears('setup', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
+    console.log(message);
     for (var i = 2; i <= 5; i++){
-        var mockUser = {
-            user: {
-                name: 'Player' + i
-            }
-        };
+        var mockUser = 'Player' + i;
 
         joinGame(bot, message, mockUser);
     }
-
-})
-*/
+});
 
 function quitGame(bot, message){
     var user = message.user_name,
@@ -136,8 +85,8 @@ function quitGame(bot, message){
     reportTurnOrder(bot, message);
 }
 
-function joinGame(bot, message){
-    var user = message.user_name,
+function joinGame(bot, message, userName){
+    var user = userName || message.user_name,
         channel = message.channel;
 
     var game = getGame(bot, message);
