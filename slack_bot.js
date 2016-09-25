@@ -101,7 +101,9 @@ function beginGame(bot, message){
             announceTurn(bot, message);
         });     
 
-    Promise.resolve(deckRequest);
+    Promise.all([deckRequest]);
+
+    var drawRequests = [];
 
     //Deal to each of the players
     for (playerName in game.players){
@@ -115,8 +117,10 @@ function beginGame(bot, message){
                 }
             });
 
-        Promise.resolve(cardRequest);
+        drawRequests.push(cardRequest);
     }
+
+    Promise.all(drawRequests);
 
     announceTurn(bot, message);
 }
@@ -152,7 +156,7 @@ function getStandardCard(unoCard){
 function announceTurn(bot, message){
     var game = getGame(bot, message);
 
-    bot.replyPublic(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType \\uno cards, \\uno draw, \\uno skip or \\uno play.')
+    bot.replyPublicDelayed(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType \\uno cards, \\uno draw, \\uno skip or \\uno play.')
 }
 
 function quitGame(bot, message){
@@ -209,7 +213,7 @@ function joinGame(bot, message, userName){
     game.players[user] = {
         hand: []
     };
-    game.turnOrder[game.turnOrder.length] = user;
+    game.turnOrder.push(user);
 
     bot.replyPublic(message, user + ' has joined the game.');
 
@@ -284,7 +288,7 @@ function initializeGame(bot, message){
     game.players[user] = {
         hand: []
     };
-    game.turnOrder[game.turnOrder.length] = user;
+    game.turnOrder.push(user);
 
     bot.replyPublic(message, user + ' has started UNO. Type !join to join the game.');
 
