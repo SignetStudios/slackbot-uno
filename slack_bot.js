@@ -90,7 +90,8 @@ function beginGame(bot, message){
 
     //Create the deck
     request({
-        uri: 'http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2'
+        uri: 'http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2',
+        json: true
     }).then(function(result){
                 console.log(result['0']);
                 game.deckId = result.deck_id;
