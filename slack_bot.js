@@ -85,6 +85,7 @@ function beginGame(bot, message){
     }
 
     game.started = true;
+    var drawRequests = [];
 
     bot.replyPublic(message, 'Game has started! Shuffling and dealing the hands.');
 
@@ -96,37 +97,38 @@ function beginGame(bot, message){
         .then(function(result){
                 game.deckId = result.deck_id;
             })
-        .then(function(deckId){
+        .then(function(){
                 console.log('Deck request finished');
-                return deckId;
             })
-        .done();
+        .then(function(){
+                for (playerName in game.players){
+                    console.log('beginning draw for ' + playerName);
+                    var player = game.players[playerName];
+                    var drawRequest = request({
+                                uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=7',
+                                json: true
+                            })
+                        .then(function(result){
+                            console.log(result);
 
+                            for (var j = 0; j < result.cards.length; j++){
+                                player.cards[j] = getUnoCard(result.cards[j]);
+                            }
+                        })
+                        .then(function(){
+                            console.log('Draw request finished');
+                        });
 
-    var drawRequests = [];
-
-    for (playerName in game.players){
-        var player = game.players[playerName];
-        var drawRequest = request('http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=7')
-                .then(function(result){
-                    console.log(result);
-
-                    for (var j = 0; j < result.cards.length; j++){
-                        player.cards[j] = getUnoCard(result.cards[j]);
-                    }
+                    drawRequests.push(drawRequest);                    
+                }
+            })
+        .then(function(){
+                Q.allSettled(drawRequests).then(function(){
+                    console.log('All draw requests should be finished by now.');
+                    console.log(game);
+                    announceTurn(bot, message);
                 })
-                .then(function(){
-                    console.log('Draw request finished');
-                });
-
-        drawRequests.push(drawRequest);                    
-    }
-
-    Q.allSettled(drawRequests).done();
-
-    console.log('All draw requests should be finished by now.');
-    console.log(game);
-    announceTurn(bot, message);
+            });
 }
 
 function getUnoCard(standardCard){
