@@ -21,8 +21,6 @@ controller.setupWebserver(process.env.PORT, function(err, webserver) {
 var games = {};
 
 controller.on('slash_command', function(bot, message){
-    console.log(message);
-    bot.replyPublic(message, 'someone just used /uno');
     bot.replyPrivate(message, 'I know it was you.');
 });
 
