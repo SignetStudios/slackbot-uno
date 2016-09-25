@@ -46,7 +46,7 @@ controller.hears('order', ['slash_command'/*, 'direct_mention', 'mention'*/], fu
 
 controller.hears('setup', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
     console.log(message);
-    for (var i = 2; i <= 5; i++){
+    for (var i = 2; i <= 2; i++){
         var mockUser = 'Player' + i;
 
         joinGame(bot, message, mockUser);
@@ -67,21 +67,16 @@ function beginGame(bot, message){
     }
 
     if (game.player1 !== user){
-        console.log(game);
         bot.replyPrivate(message, 'Only player 1 (' + game.player1 + ') can start the game.');
         return;
     }
 
-    console.log(Object.keys(game.players).length + ' players at beginning of game.');
-
     if (Object.keys(game.players).length < 2){
-        console.log(game);
         bot.replyPrivate(message, 'You need at least two players to begin playing.');
         return;
     }
 
     if (game.started){
-        console.log(game);
         bot.replyPrivate(message, 'The game is already started.');
         reportTurnOrder(bot, message, true, true);
         return;
@@ -92,11 +87,10 @@ function beginGame(bot, message){
     //Create the deck
     var deckRequest = request('http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2')
         .then(function(result){
-            console.log(result);
             game.deckId = result.deck_id;
         }).then(function(){
             console.log('Deck request finished');
-        });
+        }).reflect();
 
     Promise.all([deckRequest]);
 
@@ -119,7 +113,7 @@ function beginGame(bot, message){
                 console.log('Draw request finished');
             });
 
-        drawRequests.push(cardRequest);
+        drawRequests.push(cardRequest.reflect());
     }
 
     Promise.all(drawRequests);
