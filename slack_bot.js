@@ -86,39 +86,40 @@ function beginGame(bot, message){
     var drawRequests = [];
 
     //Create the deck
-    var requestChain = request('http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2').then(function(result){
-            game.deckId = result.deck_id;
-        }).then(function(){
-            console.log('Deck request finished');
-        }).then(function(){
-            console.log('Deck request should be finished by now.');
-        });
-        
-    requestChain.then(function(){
-            //Deal to each of the players
-            for (playerName in game.players){
-                var player = game.players[playerName];
-                requestChain.then(function(){
-                    request('http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=7')
-                        .then(function(result){
-                            console.log(result);
+    request('http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2').then(function(result){
+                game.deckId = result.deck_id;
+            })
+        .then(function(){
+                console.log('Deck request finished');
+            })
+        .reflect()
+        .then(function(){
+                console.log('Deck request should be finished by now.');
 
-                            for (var j = 0; j < result.cards.length; j++){
-                                player.cards[j] = getUnoCard(result.cards[j]);
-                            }
-                        })
-                        .then(function(){
-                            console.log('Draw request finished');
-                        })
-                });
-            }
-        });
-        
-    requestChain.then(function(){
-            console.log('All draw requests should be finished by now.');
-        }).then(function(){
-            console.log(game);
-            announceTurn(bot, message);
+                for (playerName in game.players){
+                    var player = game.players[playerName];
+                    var drawRequest = request('http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=7')
+                            .then(function(result){
+                                console.log(result);
+
+                                for (var j = 0; j < result.cards.length; j++){
+                                    player.cards[j] = getUnoCard(result.cards[j]);
+                                }
+                            })
+                            .then(function(){
+                                console.log('Draw request finished');
+                            });
+
+                    drawRequests.push(drawRequest);                    
+                }
+            })
+        .then(function(){
+            Promise.All(drawRequests)
+                .then(function(){
+                    console.log('All draw requests should be finished by now.');
+                    console.log(game);
+                    announceTurn(bot, message);
+                })
         });
 }
 
