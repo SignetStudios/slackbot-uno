@@ -15,7 +15,7 @@ var bot = controller.spawn({
     }).startRTM();
 
 controller.setupWebserver(process.env.PORT, function(err, webserver) {
-  controller.createWebhookEndpoints(controller.webserver);
+  controller.createWebhookEndpoints(controller.webserver, 'PsRh1Hn3lbVjQpYtf3UaLwKH');
 });
 
 var games = {};
