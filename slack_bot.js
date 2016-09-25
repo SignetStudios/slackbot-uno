@@ -25,13 +25,13 @@ controller.on('slash_command', function(bot, message){
 
     switch (message.text){
         case 'new':
-            initializeGame(bot, message, res);
+            initializeGame(bot, message);
             break;
         case 'join':
-            joinGame(bot, message, res); 
+            joinGame(bot, MessageEvent); 
             break;
         case 'quit':
-            quitGame(bot, message, res);
+            quitGame(bot, message);
             break;
         case 'order':
             reportTurnOrder(bot, message);
