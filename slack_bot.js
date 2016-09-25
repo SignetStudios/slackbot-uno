@@ -83,44 +83,39 @@ function beginGame(bot, message){
     }
 
     game.started = true;
+    var drawRequests = [];
 
     //Create the deck
-    var deckRequest = request('http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2')
-        .then(function(result){
+    request('http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2').then(function(result){
             game.deckId = result.deck_id;
         }).then(function(){
             console.log('Deck request finished');
-        }).reflect();
+        }).then(function(){
+            console.log('Deck request should be finished by now.');
+        }).then(function(){
+            //Deal to each of the players
+            for (playerName in game.players){
+                var player = game.players[playerName];
+                var cardRequest = request('http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=7')
+                    .then(function(result){
+                        console.log(result);
 
-    Promise.all([deckRequest]);
+                        for (var j = 0; j < result.cards.length; j++){
+                            player.cards[j] = getUnoCard(result.cards[j]);
+                        }
+                    })
+                    .then(function(){
+                        console.log('Draw request finished');
+                    });
 
-    console.log('Deck request should be finished by now.');
-
-    var drawRequests = [];
-
-    //Deal to each of the players
-    for (playerName in game.players){
-        var player = game.players[playerName];
-        var cardRequest = request('http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=7')
-            .then(function(result){
-                console.log(result);
-
-                for (var j = 0; j < result.cards.length; j++){
-                    player.cards[j] = getUnoCard(result.cards[j]);
-                }
-            })
-            .then(function(){
-                console.log('Draw request finished');
-            });
-
-        drawRequests.push(cardRequest.reflect());
-    }
-
-    Promise.all(drawRequests);
-    console.log('All draw requests should be finished by now.');
-
-    console.log(game);
-    announceTurn(bot, message);
+                drawRequests.push(cardRequest.reflect());
+            }
+        }).then(function(){
+            console.log('All draw requests should be finished by now.');
+        }).then(function(){
+            console.log(game);
+            announceTurn(bot, message);
+        });
 }
 
 function getUnoCard(standardCard){
