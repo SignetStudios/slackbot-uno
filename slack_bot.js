@@ -34,7 +34,7 @@ controller.on('slash_command', function(bot, message){
             quitGame(bot, message);
             break;
         case 'order':
-            reportTurnOrder(bot, message);
+            reportTurnOrder(bot, message, true);
             break;
         case 'setup':
             for (var i = 2; i <= 5; i++){
@@ -106,7 +106,7 @@ function quitGame(bot, message){
         channel = message.channel;
 
     if (!game.players[user]){
-        bot.replyPrivateDelayed(message, 'No problem, ' + user + ', you weren\'t playing to begin with.');
+        bot.replyPrivate(message, 'No problem, you weren\'t playing to begin with.');
         return;
     }
 
@@ -115,7 +115,7 @@ function quitGame(bot, message){
     var player = game.turnOrder.indexOf(user);
     game.turnOrder.splice(player, 1);
 
-    bot.replyPublicDelayed(message, user + ' has left the game.');
+    bot.replyPublic(message, user + ' has left the game.');
 
     if (Object.keys(game.players).length === 0){
         bot.replyPublicDelayed(message, 'No more players. Ending the game.');
@@ -147,7 +147,7 @@ function joinGame(bot, message){
     }
 
     if (game.players[user]){
-        bot.replyPrivateDelayed(message, user + ', you\'ve already joined the game!');
+        bot.replyPrivate(message, user + ', you\'ve already joined the game!');
         return;
     }
 
@@ -156,7 +156,7 @@ function joinGame(bot, message){
     };
     game.turnOrder[game.turnOrder.length] = user;
 
-    bot.replyPublicDelayed(message, user + ' has joined the game.');
+    bot.replyPublic(message, user + ' has joined the game.');
 
     reportTurnOrder(bot, message);
 }
@@ -167,7 +167,7 @@ function getGame(bot, message, suppressReport){
     if (!games[channel] || !games[channel].initialized){
         if (!suppressReport)
         {
-            bot.replyPrivateDelayed(message, 'There is no game yet.');
+            bot.replyPrivate(message, 'There is no game yet.');
         }
         return undefined;
     }
@@ -175,7 +175,7 @@ function getGame(bot, message, suppressReport){
     return games[channel];
 }
 
-function reportTurnOrder(bot, message){
+function reportTurnOrder(bot, message, isPrivate){
     var game = getGame(bot, message);
 
     if (!game){
@@ -192,7 +192,12 @@ function reportTurnOrder(bot, message){
         currentOrder = currentOrder + '\n' + i + '. ' + game.turnOrder[i - 1]; 
     }
 
-    bot.replyPrivateDelayed(message, 'Current playing order:\n' + currentOrder);
+    if (isPrivate){
+        bot.replyPrivate(message, 'Current playing order:\n' + currentOrder);
+    }
+    else{
+        bot.replyPublicDelayed(message, 'Current playing order:\n' + currentOrder);
+    }
 }
 
 function initializeGame(bot, message){
@@ -208,7 +213,7 @@ function initializeGame(bot, message){
     }
 
     if (game.initialized){
-        bot.replyPrivateDelayed(message, 'There is already an uno game in progress. Type !join to join the game.');
+        bot.replyPrivate(message, 'There is already an uno game in progress. Type !join to join the game.');
         return;
     }
         
@@ -222,7 +227,7 @@ function initializeGame(bot, message){
     };
     game.turnOrder[game.turnOrder.length] = user;
 
-    bot.replyPublicDelayed(message, user + ' has started UNO. Type !join to join the game.');
+    bot.replyPublic(message, user + ' has started UNO. Type !join to join the game.');
 
     reportTurnOrder(bot, message);
 };
