@@ -114,7 +114,7 @@ function beginGame(bot, message){
                 }
             })
         .then(function(){
-            Promise.All(drawRequests)
+            Promise.all(drawRequests)
                 .then(function(){
                     console.log('All draw requests should be finished by now.');
                     console.log(game);
