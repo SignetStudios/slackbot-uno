@@ -91,17 +91,21 @@ function beginGame(bot, message){
     //Create the deck
     request('http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2').then(function(result){
                 game.deckId = result.deck_id;
-                console.log('deckId set to ' + game.deck_id);
+                console.log('deckId set to ' + game.deckId);
+                return game.deckId;
             })
-        .then(function(){
+        .then(function(deckId){
                 console.log('Deck request finished');
+                return deckId;
             })
-        .resolve();
+        .then(function(deckId){
+            console.log('Deck request should be finished by now.');
+            console.log('DeckId = ' + game.deckId);
+            console.log('or DeckId = ' + deckId);
+            console.log(game);
+        });
 
-    console.log('Deck request should be finished by now.');
-    console.log('DeckId = ' + game.deckId);
-    console.log(game);
-
+/*
     var drawRequests = [];
 
     for (playerName in game.players){
@@ -124,7 +128,7 @@ function beginGame(bot, message){
     Q.allSettled(drawRequests).done();
 
     console.log('All draw requests should be finished by now.');
-    console.log(game);
+    console.log(game);*/
     announceTurn(bot, message);
 }
 
