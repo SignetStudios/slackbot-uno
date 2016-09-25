@@ -92,7 +92,7 @@ function beginGame(bot, message){
     request({
         uri: 'http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2'
     }).then(function(result){
-                console.log(arguments);
+                console.log(result['0']);
                 game.deckId = result.deck_id;
                 console.log('deckId set to ' + game.deckId);
                 return game.deckId;
