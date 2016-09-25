@@ -65,22 +65,27 @@ function beginGame(bot, message){
     }
 
     if (game.player1 !== user){
+        console.log(game);
         bot.replyPrivate(message, 'Only player 1 (' + game.player1 + ') can start the game.');
         return;
     }
 
     if (game.players.length < 2){
+        console.log(game);
         bot.replyPrivate(message, 'You need at least two players to begin playing.');
         return;
     }
 
     if (game.started){
+        console.log(game);
         bot.replyPrivate(message, 'The game is already started.');
         reportTurnOrder(bot, message, true, true);
         return;
     }
 
     game.started = true;
+
+    console.log(game);
 
     announceTurn(bot, message);
 }
