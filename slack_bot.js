@@ -92,7 +92,6 @@ function beginGame(bot, message){
         .then(function(){
                 console.log('Deck request finished');
             })
-        .reflect()
         .then(function(){
                 console.log('Deck request should be finished by now.');
                 console.log('DeckId = ' + game.deckId);
