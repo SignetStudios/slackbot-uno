@@ -72,9 +72,9 @@ function beginGame(bot, message){
         return;
     }
 
-    console.log(game.players.length + ' players at beginning of game.');
-    
-    if (game.players.length < 2){
+    console.log(Object.keys(game.players).length + ' players at beginning of game.');
+
+    if (Object.keys(game.players).length < 2){
         console.log(game);
         bot.replyPrivate(message, 'You need at least two players to begin playing.');
         return;
@@ -104,8 +104,8 @@ function beginGame(bot, message){
     Promise.resolve(deckRequest);
 
     //Deal to each of the players
-    for (i = 0; i < game.players.length; i++){
-        var player = game.players[i];
+    for (playerName in game.players){
+        var player = game.players[playerName];
         var cardRequest = request('http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=7')
             .then(function(result){
                 console.log(result);
@@ -117,6 +117,8 @@ function beginGame(bot, message){
 
         Promise.resolve(cardRequest);
     }
+
+    announceTurn(bot, message);
 }
 
 function getUnoCard(standardCard){
@@ -181,7 +183,7 @@ function quitGame(bot, message){
         bot.replyPublicDelayed(message, game.player1 + ' is the new player 1.');        
     }
 
-    if (game.players.length === 1){
+    if (Object.keys(game.players).length === 1){
         game.started = false;
         bot.replyPublicDelayed(message, 'Only one player remaining. Waiting for more players.');        
     }
