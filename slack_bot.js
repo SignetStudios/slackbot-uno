@@ -25,19 +25,13 @@ controller.on('slash_command', function(bot, message){
 
     switch (message.text){
         case 'new':
-            operateOnUser(bot, message, function(err, res){
-                initializeGame(bot, message, res);
-            });
+            initializeGame(bot, message, res);
             break;
         case 'join':
-            operateOnUser(bot, message, function(err, res){ 
-                joinGame(bot, message, res); 
-            });
+            joinGame(bot, message, res); 
             break;
         case 'quit':
-            operateOnUser(bot, message, function(err, res){
-                quitGame(bot, message, res);
-            });
+            quitGame(bot, message, res);
             break;
         case 'order':
             reportTurnOrder(bot, message);
@@ -100,12 +94,9 @@ controller.hears(['!setup'], ['direct_message'], function(bot, message){
 
 })
 */
-function operateOnUser(bot, message, callback){
-    bot.api.users.info({user: message.user}, callback);
-}
 
-function quitGame(bot, message, apiUser){
-    var user = apiUser.user.name,
+function quitGame(bot, message){
+    var user = message.user_name,
         game = getGame(bot, message),
         channel = message.channel;
 
@@ -140,8 +131,8 @@ function quitGame(bot, message, apiUser){
     reportTurnOrder(bot, message);
 }
 
-function joinGame(bot, message, apiUser){
-    var user = apiUser.user.name,
+function joinGame(bot, message){
+    var user = message.user_name,
         channel = message.channel;
 
     var game = getGame(bot, message);
@@ -199,8 +190,8 @@ function reportTurnOrder(bot, message){
     bot.replyPrivate(message, 'Current playing order:\n' + currentOrder);
 }
 
-function initializeGame(bot, message, apiUser){
-    var user = apiUser.user.name,
+function initializeGame(bot, message){
+    var user = message.user_name,
         channel = message.channel;
 
     var game = getGame(bot, message, true);
