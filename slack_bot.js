@@ -3,22 +3,24 @@ if (!process.env.token) {
     process.exit(1);
 }
 
-var Botkit = require('./lib/Botkit.js');
-var os = require('os');
-
-var controller = Botkit.slackbot({
-    //debug: true
-});
-
-var bot = controller.spawn({
+var Botkit = require('./lib/Botkit.js'),
+    os = require('os'),
+    controller = Botkit.slackbot({
+        //debug: true
+    }),
+    bot = controller.spawn({
         token: process.env.token
-    }).startRTM();
+    }).startRTM(),
+    request = require('request-promise'),
+    Promise = require('bluebird');
 
 controller.setupWebserver(process.env.PORT, function(err, webserver) {
   controller.createWebhookEndpoints(controller.webserver, 'PsRh1Hn3lbVjQpYtf3UaLwKH');
 });
 
-var games = {};
+var games = {},
+    suitMappings = {'HEARTS': 'red', 'SPADES': 'green', 'CLUBS': 'yellow', 'DIAMONDS': 'blue'},
+    valueMappings = {'JACK': 'Draw 2', 'QUEEN': 'Skip', 'KING': 'Reverse'};
 
 //TODO: Allow for commands via @mentions as well
 
@@ -70,6 +72,8 @@ function beginGame(bot, message){
         return;
     }
 
+    console.log(game.players.length + ' players at beginning of game.');
+    
     if (game.players.length < 2){
         console.log(game);
         bot.replyPrivate(message, 'You need at least two players to begin playing.');
@@ -85,9 +89,62 @@ function beginGame(bot, message){
 
     game.started = true;
 
-    console.log(game);
+    //Create the deck
+    var deckRequest = request('http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2')
+        .then(function(result){
+            console.log(result);
 
-    announceTurn(bot, message);
+            game.deckId = result.deck_id;
+
+            console.log(game);
+
+            announceTurn(bot, message);
+        });     
+
+    Promise.resolve(deckRequest);
+
+    //Deal to each of the players
+    for (i = 0; i < game.players.length; i++){
+        var player = game.players[i];
+        var cardRequest = request('http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=7')
+            .then(function(result){
+                console.log(result);
+
+                for (var j = 0; j < result.cards.length; j++){
+                    player.cards[j] = getUnoCard(result.cards[j]);
+                }
+            });
+
+        Promise.resolve(cardRequest);
+    }
+}
+
+function getUnoCard(standardCard){
+    var value = valueMappings[standardCard.value] || (standardCard.value - 1),
+        color = suitMappings[standardCard.suit];
+
+    if (value === 'ACE'){
+        color = 'Wild';
+        switch (standardCard.suit){
+            case 'CLUBS':
+            case 'SPADES':
+                value = 'Wild';
+                break;
+            case 'HEARTS':
+            case 'DIAMONDS':
+                value = 'Draw 4';
+                break;
+        }
+    }
+
+    return {
+        color: color,
+        value: value
+    }
+}
+
+function getStandardCard(unoCard){
+    
 }
 
 function announceTurn(bot, message){
