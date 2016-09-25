@@ -95,6 +95,8 @@ function beginGame(bot, message){
         .reflect()
         .then(function(){
                 console.log('Deck request should be finished by now.');
+                console.log('DeckId = ' + game.deckId);
+                console.log(game);
 
                 for (playerName in game.players){
                     var player = game.players[playerName];
