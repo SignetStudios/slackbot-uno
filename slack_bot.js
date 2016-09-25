@@ -93,15 +93,14 @@ function beginGame(bot, message){
     var deckRequest = request('http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2')
         .then(function(result){
             console.log(result);
-
             game.deckId = result.deck_id;
-
-            console.log(game);
-
-            announceTurn(bot, message);
-        });     
+        }).then(function(){
+            console.log('Deck request finished');
+        });
 
     Promise.all([deckRequest]);
+
+    console.log('Deck request should be finished by now.');
 
     var drawRequests = [];
 
@@ -115,13 +114,18 @@ function beginGame(bot, message){
                 for (var j = 0; j < result.cards.length; j++){
                     player.cards[j] = getUnoCard(result.cards[j]);
                 }
+            })
+            .then(function(){
+                console.log('Draw request finished');
             });
 
         drawRequests.push(cardRequest);
     }
 
     Promise.all(drawRequests);
+    console.log('All draw requests should be finished by now.');
 
+    console.log(game);
     announceTurn(bot, message);
 }
 
