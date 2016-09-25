@@ -153,7 +153,7 @@ function getStandardCard(unoCard){
 function announceTurn(bot, message){
     var game = getGame(bot, message);
 
-    bot.replyPublicDelayed(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType \\uno cards, \\uno draw, \\uno skip or \\uno play.')
+    bot.replyPublic(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType \\uno cards, \\uno draw, \\uno skip or \\uno play.')
 }
 
 function quitGame(bot, message){
