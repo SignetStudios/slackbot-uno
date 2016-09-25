@@ -88,16 +88,15 @@ function beginGame(bot, message){
 
     //Create the deck
     request('http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2').then(function(result){
-                return result.deck_id;
+                game.deckId = result.deck_id;
             })
-        .then(function(deckId){
+        .then(function(){
                 console.log('Deck request finished');
-                return deckId;
             })
         .done();
 
     console.log('Deck request should be finished by now.');
-    console.log('DeckId = ' + deckId);
+    console.log('DeckId = ' + game.deckId);
     console.log(game);
 
     var drawRequests = [];
