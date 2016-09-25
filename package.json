@@ -6,6 +6,7 @@
   "dependencies": {
     "async": "^2.0.0-rc.5",
     "back": "^1.0.1",
+    "bluebird": "^3.4.6",
     "body-parser": "^1.14.2",
     "command-line-args": "^3.0.0",
     "express": "^4.13.3",
