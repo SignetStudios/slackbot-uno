@@ -58,7 +58,7 @@ controller.hears('start', ['slash_command'], function(bot, message){
 });
 
 //The following should hear most combinations of cards that can be played
-controller.hears('^play(?: (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?|w(?:ild)?|d(?:raw ?4)?)(?: ?([1-9]|s(?:kip)?|r(?:everse)?|d(?:raw ?[2,4])?|w(?:ild)?', ['slash_command'], function(bot, message){
+controller.hears('^play(?: (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?|w(?:ild)|d(?:raw ?4)?)(?: ?([1-9]|s(?:kip)?|r(?:everse)?|d(?:raw ?[2,4])?|w(?:ild)?))?)?$', ['slash_command'], function(bot, message){
     playCard(bot, message);
 });
 
