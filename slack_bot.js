@@ -19,7 +19,7 @@ var Botkit = require('./lib/Botkit.js'),
 controller.configureSlackApp({
     clientId: process.env.clientId,
     clientSecret: process.env.clientSecret,
-    redirectUri: 'http://localhost:3002',
+    redirectUri: 'http://signet-studios-uno.herokuapp.com',
     scopes: ['incoming-webhook','team:read','users:read','channels:read','im:read','im:write','groups:read','emoji:read','chat:write:bot']
 })
 
