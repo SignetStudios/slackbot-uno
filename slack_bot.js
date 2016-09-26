@@ -119,7 +119,13 @@ function playCard(bot, message){
     toPlayColor = {'b': 'blue', 'y': 'yellow', 'g': 'green', 'r': 'red'}[toPlayColor] || toPlayColor;
     toPlayValue = {'s': 'Skip', 'r': 'Reverse', 'draw2': 'Draw 2'}[toPlayValue] || toPlayValue;
 
+    console.log(playerName + ' trying to play a ' + toPlayColor + ' ' + toPlayValue);
     var player = game.players[playerName];
+
+    for (var i = 0; i < player.hand.length; i++){
+        console.log(player.hand[i]);
+    }
+
 
     var selectedCards = player.hand.filter(function(item){ return item.color === toPlayColor && item.value === toPlayValue; }); 
 
