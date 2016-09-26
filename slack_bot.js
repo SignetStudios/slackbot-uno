@@ -17,7 +17,9 @@ var Botkit = require('./lib/Botkit.js'),
     request = require('request-promise-any');
 
 controller.setupWebserver(process.env.PORT, function(err, webserver) {
-  controller.createWebhookEndpoints(controller.webserver, 'PsRh1Hn3lbVjQpYtf3UaLwKH');
+    controller.createHomepageEndpoint(controller.webserver);
+    controller.createWebhookEndpoints(controller.webserver, 'PsRh1Hn3lbVjQpYtf3UaLwKH');
+    controller.createOauthEndpoints(controller.webserver);
 });
 
 var games = {},
