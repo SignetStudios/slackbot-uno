@@ -66,6 +66,10 @@ controller.hears('^color (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?)', ['slash_c
     setWildColor(bot, message);
 })
 
+controller.hears(['draw'], ['slash_command'], function(bot, message){
+    drawCard(bot, message);
+});
+
 controller.hears(['cards', 'draw', 'skip'], ['slash_command'], function(bot, message){
     bot.replyPrivate(message, 'I\'m sorry, I\'m afraid I can\'t do that ' + message.user_name);
 });
@@ -232,6 +236,14 @@ function reportHand(bot, message, isDelayed){
     var game = getGame(bot, message),
     playerName = message.user_name;
 
+    if (!game){
+        return;
+    }
+
+    if (!game.started){
+        bot.replyPrivate(message, 'The game has not yet started.');
+    }
+
     var player = game.players[playerName];
 
     var hand = [];
@@ -240,7 +252,7 @@ function reportHand(bot, message, isDelayed){
         var card = player.hand[i];
         hand.push({
             "color": colorToHex(card.color),
-            "text": card.value
+            "text": card.color + ' ' + card.value
         });        
     }
 
@@ -318,6 +330,25 @@ function beginGame(bot, message){
     });
 }
 
+function drawCard(bot, message){
+    var game = getGame(bot, message),
+        playerName = message.user_name;
+
+    if (!game){
+        return;
+    }
+
+    if (!game.started){
+        bot.replyPrivate(message, 'The game has not yet started.');
+        return;
+    }
+
+    drawCards(bot, message, playerName, 1)
+        .then(function(){
+            reportHand(bot, message);
+        });
+}
+
 function drawCards(bot, message, playerName, count){
     console.log('Drawing ' + count + ' cards for ' + playerName);
     var game = getGame(bot, message, true);
@@ -337,6 +368,16 @@ function drawCards(bot, message, playerName, count){
         for (var j = 0; j < cardCount; j++){
             var card = getUnoCard(result.cards[j])
             player.hand.push(card);
+        }
+
+        if (result.remaining <= 10){
+            bot.replyPublicDelayed(message, 'Less than 10 cards remaining. Reshuffling the deck.');
+            request({
+                uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/shuffle/',
+                json: true
+            }).then(function(shuffleResult){
+                bot.replyPublicDelayed(message, 'Deck reshuffled.');
+            });
         }
     }).catch(function(err){
         console.log(err);
@@ -481,7 +522,7 @@ function reportTurnOrder(bot, message, isPrivate, isDelayed){
             cardReport = '';
 
         if (game.started){
-            cardReport = '(' + game.players[playerName].hand.length + ' cards)';
+            cardReport = ' (' + game.players[playerName].hand.length + ' cards)';
         }
 
         currentOrder = currentOrder + '\n' + i + '. ' + playerName + cardReport; 
