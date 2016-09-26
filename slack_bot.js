@@ -160,7 +160,8 @@ function playCard(bot, message){
         endTurn(bot, message);
     }
     
-    reportHand(bot, message, true);    
+    reportHand(bot, message, true);
+    announceTurn(bot, message);
 }
 
 function setWildColor(bot, message){
