@@ -98,6 +98,17 @@ function beginGame(bot, message){
 
             drawRequests.push(drawRequest);                    
         }
+        
+        //draw the starting card as well
+        var drawRequest = request({
+            uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=1',
+            json: true
+        }).then(function(result){
+            game.currentCard = getUnoCard(result.cards[0]);
+        });
+
+        drawRequests.push(drawRequest);
+
     }).then(function(){
         Q.allSettled(drawRequests).then(function(){
             announceTurn(bot, message);
@@ -157,6 +168,7 @@ function getStandardCard(unoCard){
 function announceTurn(bot, message){
     var game = getGame(bot, message);
 
+    bot.replyPublicDelayed(message, 'The current up card is a ' + game.currentCard.color + ' ' + game.currentCard.value);
     bot.replyPublicDelayed(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType \\uno cards, \\uno draw, \\uno skip or \\uno play.')
 }
 
@@ -302,7 +314,8 @@ function newGame(){
         started: false,
         players: [],
         deckId: '',
-        turnOrder: []
+        turnOrder: [],
+        currentCard: {}
     };
 }
 
