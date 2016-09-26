@@ -89,56 +89,51 @@ function beginGame(bot, message){
 
     bot.replyPublic(message, 'Game has started! Shuffling the deck and dealing the hands.');
 
-    //Create the deck
     request({
-                uri: 'http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2',
+        uri: 'http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2',
+        json: true
+    }).then(function(result){
+        game.deckId = result.deck_id;
+    }).then(function(){
+        for (playerName in game.players){
+            var drawRequest = drawCards(bot, message, playerName, 7);
+
+            drawRequests.push(drawRequest);                    
+        }
+    }).then(function(){
+        Q.allSettled(drawRequests).then(function(){
+            console.log('All draw requests should be finished by now.');
+            console.log(game);
+            announceTurn(bot, message);
+        })
+    });
+}
+
+function drawCards(bot, message, playerName, count){
+    console.log('Drawing ' + count + ' cards for ' + playerName);
+    var game = getGame(bot, message, true);
+        player = game.players[playerName];
+
+    return request({
+                uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=' + count,
                 json: true
             })
         .then(function(result){
-                game.deckId = result.deck_id;
-            })
-        /*.then(function(){
-                console.log('Deck request finished');
-            })*/
+            console.log('Drew ' + result.cards.length + ' cards, adding to ' + playerName + ' hand');
+            var cardCount = result.cards.length;
+
+            for (var j = 0; j < cardCount; j++){
+                var card = getUnoCard(result.cards[j])
+                player.hand.push(card);
+            }
+        })
         .then(function(){
-                for (playerName in game.players){
-                    console.log('beginning draw for ' + playerName);
-                    var player = game.players[playerName];
-                    var drawRequest = request({
-                                uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=7',
-                                json: true
-                            })
-                        .then(function(result){
-                            console.log(result);
-
-                            console.log(result.cards.length + ' cards returned, adding to ' + playerName + ' hand');
-                            var cardCount = result.cards.length;
-
-                            for (var j = 0; j < cardCount; j++){
-                                console.log(j);
-                                //console.log(result.cards[j]);
-                                var card = getUnoCard(result.cards[j])
-                                player.hand.push(card);
-                            }
-                        })
-                        .then(function(){
-                            console.log('Draw request finished');
-                            console.log(player);
-                        })
-                        .catch(function(err){
-                            console.log(err);
-                        });
-
-                    drawRequests.push(drawRequest);                    
-                }
-            })
-        .then(function(){
-                Q.allSettled(drawRequests).then(function(){
-                    console.log('All draw requests should be finished by now.');
-                    console.log(game);
-                    announceTurn(bot, message);
-                })
-            });
+            console.log('Draw request finished');
+            console.log(player);
+        })
+        .catch(function(err){
+            console.log(err);
+        });
 }
 
 function getUnoCard(standardCard){
@@ -148,7 +143,7 @@ function getUnoCard(standardCard){
     var value = valueMappings[standardCard.value] || (standardCard.value - 1),
         color = suitMappings[standardCard.suit];
 
-    if (value === 'ACE'){
+    if (standardCard.value === 'ACE'){
         color = 'Wild';
         switch (standardCard.suit){
             case 'CLUBS':
