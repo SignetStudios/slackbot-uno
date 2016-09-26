@@ -16,22 +16,16 @@ var Botkit = require('./lib/Botkit.js'),
     Q = require('q'),
     request = require('request-promise-any');
 
-/*controller.configureSlackApp({
-    clientId: process.env.clientId,
-    clientSecret: process.env.clientSecret,
-    redirectUri: 'http://signet-studios-uno.herokuapp.com',
-    scopes: ['incoming-webhook','team:read','users:read','channels:read','im:read','im:write','groups:read','emoji:read','chat:write:bot']
-})*/
+//TODO: Set up bot as an actual Slack App, to make use of interactive message callbacks
 
 controller.setupWebserver(process.env.PORT, function(err, webserver) {
     controller.createHomepageEndpoint(controller.webserver);
     controller.createWebhookEndpoints(controller.webserver, ['PsRh1Hn3lbVjQpYtf3UaLwKH', '3DHQoAANCPHfQxhLTQs7IGun']);
-    //controller.createOauthEndpoints(controller.webserver);
 });
 
 var games = {},
     suitMappings = {'HEARTS': 'red', 'SPADES': 'green', 'CLUBS': 'yellow', 'DIAMONDS': 'blue'},
-    valueMappings = {'JACK': 'Draw 2', 'QUEEN': 'Skip', 'KING': 'Reverse'};
+    valueMappings = {'JACK': 'draw 2', 'QUEEN': 'skip', 'KING': 'reverse'};
 
 //TODO: Allow for commands via @mentions as well
 
@@ -47,7 +41,7 @@ controller.hears('quit', ['slash_command'/*, 'direct_mention', 'mention'*/], fun
     quitGame(bot, message);
 });
 
-controller.hears('order', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
+controller.hears('status', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
     reportTurnOrder(bot, message, true);
 });
 
@@ -63,24 +57,31 @@ controller.hears('start', ['slash_command'], function(bot, message){
     beginGame(bot, message);
 });
 
-controller.hears('play', ['slash_command'], function(bot, message){
-    beginTurn(bot, message);
+//The following should hear most combinations of cards that can be played
+controller.hears('^play(?: (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?|w(?:ild)?|d(?:raw ?4)?)(?: ?([1-9]|s(?:kip)?|r(?:everse)?|d(?:raw ?[2,4])?|w(?:ild)?', ['slash_command'], function(bot, message){
+    playCard(bot, message);
 });
+
+controller.hears('^color (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?)', ['slash_command'], function(bot, message){
+    setWildColor(bot, message);
+})
 
 controller.hears(['cards', 'draw', 'skip'], ['slash_command'], function(bot, message){
     bot.replyPrivate(message, 'I\'m sorry, I\'m afraid I can\'t do that ' + message.user_name);
 });
 
-controller.on('interactive_message_callback', function(bot, message){
-    console.log(message);
-    bot.reply(message, 'Button clicked!');
-})
-
-function beginTurn(bot, message){
+function playCard(bot, message){
     var game = getGame(bot, message),
-        playerName = message.user_name;
+        playerName = message.user_name,
+        toPlayColor = message.match[1],
+        toPlayValue = message.match[2];
 
     if (!game){
+        return;
+    }
+
+    if (!game.started){
+        bot.replyPrivate(message, 'The game has not yet been started.');
         return;
     }
 
@@ -90,6 +91,137 @@ function beginTurn(bot, message){
         bot.replyPrivate(message, 'It is not your turn.');
         return;
     }
+
+    if (!toPlayColor && !toPlayValue){
+        reportHand(bot, message);
+        bot.replyPrivateDelayed(message, 'You can perform the following actions:\n`/uno play [card]`, `/uno draw`, `/uno view`');
+        return;
+    }
+
+    if (!/w(ild)?|d(raw ?4)?/i.test(toPlayColor) && (!toPlayValue || /draw ?4/.test(toPlayValue))){
+        bot.replyPrivate(message, 'You must specify the value of the card to be played.');
+        return;
+    }
+
+    toPlayColor = toPlayColor.toLowerCase();
+    toPlayValue = toPlayValue.toLowerCase();
+
+    if (/d(raw ?4)?/.test(toPlayColor)){
+        toPlayColor = 'wild';
+        toPlayValue = 'draw 4';
+    }
+
+    if (/w(ild)?/.test(toPlayColor)){
+        toPlayColor = 'wild';
+        toPlayValue = 'wild';
+    }
+
+    toPlayColor = {'b': 'blue', 'y': 'yellow', 'g': 'green', 'r': 'red'}[toPlayColor] || toPlayColor;
+    toPlayValue = {'s': 'Skip', 'r': 'Reverse', 'draw2': 'Draw 2'}
+
+    var player = game.players[playerName];
+
+    var selectedCards = player.hand.filter(function(item){ return item.color === toPlayColor && item.value === toPlayValue; }); 
+
+    if (selectedCards.length === 0){
+        bot.replyPrivate(message, 'You don\'t have a ' + toPlayColor + ' ' + toPlayValue);
+        return;
+    }
+
+    var cardToplay = selectedCards[0];
+
+    if (cardToPlay.color !== 'wild' && (cardToplay.color !== game.currentCard.color || cardToplay.value !== game.currentCard.value)){
+        bot.replyPrivate(message, 'You cannot play a ' + toPlayColor + ' ' + toPlayValue + ' on a ' + game.currentCard.color + ' ' + game.currentCard.value);
+        return;
+    }
+
+    player.hand.splice(player.hand.indexOf(cardToplay), 1);
+    game.currentCard = cardToplay;
+
+    if (cardToPlay.color === 'wild'){
+        bot.replyPrivate(message, 'Type `/uno color [color]` to specify what the new color should be.');
+        return;
+    }
+
+    bot.replyPublic(message, playerName + ' played a ' + toPlayColor + ' ' + toPlayValue);
+
+    if (cardToplay.value === 'skip'){
+        endTurn(bot, message);
+        endTurn(bot, message);
+    } else if (cardToplay.value === 'reverse'){
+        game.turnOrder.reverse();
+    } else if (cardToplay === 'draw 2'){
+        endTurn(bot, message);
+        drawCards(bot, message, game.turnOrder[0], 2);
+        endTurn(bot, message);
+    } else{
+        endTurn(bot, message);
+    }
+    
+    reportHand(bot, message, true);    
+}
+
+function setWildColor(bot, message){
+        var game = getGame(bot, message),
+        playerName = message.user_name,
+        newColor = message.match[1];
+
+    if (!game){
+        return;
+    }
+
+    if (!game.started){
+        bot.replyPrivate(message, 'The game has not yet been started.');
+        return;
+    }
+
+    if (game.currentCard.color !== 'wild'){
+        bot.replyPrivate(message, 'You have\'t play a wild.');
+    }
+
+    var currentPlayer = game.turnOrder[0];
+
+    if (playerName !== currentPlayer){
+        bot.replyPrivate(message, 'It is not your turn.');
+        return;
+    }
+
+    newColor = newColor.toLowerCase();
+    
+    newColor = {'b': 'blue', 'y': 'yellow', 'g': 'green', 'r': 'red'}[newColor] || newColor;
+
+    game.currentCard.color = newColor;
+
+    bot.replyPublic(message, playerName + ' played a ' + game.currentCard.value + ' and chose ' + newColor + ' as the new color.');
+
+    endTurn(bot, message);
+
+    if (game.currentCard.value === 'draw 4'){
+        drawCards(bot, message, game.turnOrder[0], 4);
+        endTurn(bot, message);
+    }
+
+    reportHand(bot, message, true);
+}
+
+function endTurn(bot, message){
+    var game = getGame(bot, message);
+
+    if (!game){
+        return;
+    }
+
+    if (!game.started){
+        bot.replyPrivate(message, 'The game has not yet been started.');
+        return;
+    }
+
+    game.turnOrder.push(game.turnOrder.shift());
+}
+
+function reportHand(bot, message, isDelayed){
+    var game = getGame(bot, message),
+    playerName = message.user_name;
 
     var player = game.players[playerName];
 
@@ -103,33 +235,19 @@ function beginTurn(bot, message){
         });        
     }
 
-    bot.replyPrivate(message, {
-        "text": 'Your current hand is:',
-        "attachments": hand
-    });
-
-    bot.replyPrivateDelayed(message, {        
-        "attachments": [
-            {
-                "pretext": "What would you like to do?",
-                "actions": [{
-                        "name": "Play",
-                        "text": "Play",
-                        "type": "button",
-                        "value": "Play"
-                    }, {
-                        "name": "Draw",
-                        "text": "Draw",
-                        "type": "button",
-                        "value": "Draw"
-                    }, {
-                        "name": "Cards",
-                        "text": "View Cards",
-                        "type": "button",
-                        "value": "Cards"
-                }]
-            }]
+    if (isDelayed)    {
+        bot.replyPrivateDelayed(message, {
+            "text": 'Your current hand is:',
+            "attachments": hand
         });
+    }
+    else {
+        bot.replyPrivate(message, {
+            "text": 'Your current hand is:',
+            "attachments": hand
+        });
+
+    }
 }
 
 function beginGame(bot, message){
@@ -194,6 +312,10 @@ function drawCards(bot, message, playerName, count){
     console.log('Drawing ' + count + ' cards for ' + playerName);
     var game = getGame(bot, message, true);
 
+    if (!game){
+        return;
+    }
+
     return request({
         uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=' + count,
         json: true
@@ -220,11 +342,11 @@ function getUnoCard(standardCard){
         switch (standardCard.suit){
             case 'CLUBS':
             case 'SPADES':
-                value = 'Wild';
+                value = 'wild';
                 break;
             case 'HEARTS':
             case 'DIAMONDS':
-                value = 'Draw 4';
+                value = 'draw 4';
                 break;
         }
     }
@@ -242,7 +364,7 @@ function getStandardCard(unoCard){
 function colorToHex(color){    
     switch(color){
         case 'blue': return '#0033cc';
-        case 'red': return '#ff3300';
+        case 'red': return '#ff0000';
         case 'green': return '#006633';
         case 'yellow': return '#ffff00';
         case 'wild': return '#000000';
@@ -254,7 +376,7 @@ function announceTurn(bot, message){
     var game = getGame(bot, message);
 
     bot.replyPublicDelayed(message, 'The current up card is a ' + game.currentCard.color + ' ' + game.currentCard.value);
-    bot.replyPublicDelayed(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType `\\uno play` to begin your turn.')
+    bot.replyPublicDelayed(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType `/uno play [card]`, `/uno draw` or `/uno cards` to begin your turn.')
 }
 
 function quitGame(bot, message){
