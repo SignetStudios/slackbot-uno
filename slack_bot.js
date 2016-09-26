@@ -145,6 +145,7 @@ function playCard(bot, message){
         return;
     }
 
+    bot.replyPrivate(message, 'playing ' + cardToPlay.color + ' ' + cardToPlay.value);
 
     if (cardToPlay.value === 'skip'){
         endTurn(bot, message);
@@ -160,7 +161,7 @@ function playCard(bot, message){
     }
     
     reportHand(bot, message, true);
-    bot.replyPublic(message, playerName + ' played a ' + toPlayColor + ' ' + toPlayValue);
+    bot.replyPublicDelayed(message, playerName + ' played a ' + toPlayColor + ' ' + toPlayValue);
     announceTurn(bot, message);
 }
 
