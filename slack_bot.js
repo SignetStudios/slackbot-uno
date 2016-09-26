@@ -58,7 +58,7 @@ controller.hears('start', ['slash_command'], function(bot, message){
 });
 
 //The following should hear most combinations of cards that can be played
-controller.hears('^play(?: (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?|w(?:ild)|d(?:raw ?4)?)(?: ?([1-9]|s(?:kip)?|r(?:everse)?|d(?:raw ?[2,4])?|w(?:ild)?))?)?$', ['slash_command'], function(bot, message){
+controller.hears('^play(?: (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?|w(?:ild)?|d(?:raw ?4)?)(?: ?([1-9]|s(?:kip)?|r(?:everse)?|d(?:raw ?[2,4])?))?)?$', ['slash_command'], function(bot, message){
     playCard(bot, message);
 });
 
@@ -98,25 +98,27 @@ function playCard(bot, message){
         return;
     }
 
-    if (!/w(ild)?|d(raw ?4)?/i.test(toPlayColor) && (!toPlayValue || /draw ?4/.test(toPlayValue))){
+    if (!/w(ild)?|d(raw ?4)?/i.test(toPlayColor) && !toPlayValue){
         bot.replyPrivate(message, 'You must specify the value of the card to be played.');
         return;
     }
 
-    toPlayColor = toPlayColor.toLowerCase();
-    if (toPlayValue){
-        toPlayValue = toPlayValue.toLowerCase();
-    }
-
-    if (/d(raw ?4)?/.test(toPlayColor)){
+    if (/d(raw ?4)?/i.test(toPlayColor)){
+        console.log('found draw 4');
+        console.log(toPlayColor);
         toPlayColor = 'wild';
         toPlayValue = 'draw 4';
     }
 
-    if (/w(ild)?/.test(toPlayColor)){
+    if (/w(ild)?/i.test(toPlayColor)){
+        console.log('found wild');
+        console.log(toPlayColor);
         toPlayColor = 'wild';
         toPlayValue = 'wild';
     }
+
+    toPlayColor = toPlayColor.toLowerCase();
+    toPlayValue = toPlayValue.toLowerCase();
 
     toPlayColor = {'b': 'blue', 'y': 'yellow', 'g': 'green', 'r': 'red'}[toPlayColor] || toPlayColor;
     toPlayValue = {'s': 'skip', 'r': 'reverse', 'draw2': 'draw 2'}[toPlayValue] || toPlayValue;
@@ -126,6 +128,7 @@ function playCard(bot, message){
     var selectedCards = player.hand.filter(function(item){ return item.color === toPlayColor && item.value === toPlayValue; }); 
 
     if (selectedCards.length === 0){
+        console.log(toPlayColor + ' ' + toPlayValue);
         bot.replyPrivate(message, 'You don\'t have a ' + toPlayColor + ' ' + toPlayValue);
         return;
     }
