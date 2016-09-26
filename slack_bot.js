@@ -104,7 +104,9 @@ function playCard(bot, message){
     }
 
     toPlayColor = toPlayColor.toLowerCase();
-    toPlayValue = toPlayValue.toLowerCase();
+    if (toPlayValue){
+        toPlayValue = toPlayValue.toLowerCase();
+    }
 
     if (/d(raw ?4)?/.test(toPlayColor)){
         toPlayColor = 'wild';
@@ -119,13 +121,7 @@ function playCard(bot, message){
     toPlayColor = {'b': 'blue', 'y': 'yellow', 'g': 'green', 'r': 'red'}[toPlayColor] || toPlayColor;
     toPlayValue = {'s': 'Skip', 'r': 'Reverse', 'draw2': 'Draw 2'}[toPlayValue] || toPlayValue;
 
-    console.log(playerName + ' trying to play a ' + toPlayColor + ' ' + toPlayValue);
     var player = game.players[playerName];
-
-    for (var i = 0; i < player.hand.length; i++){
-        console.log(player.hand[i]);
-    }
-
 
     var selectedCards = player.hand.filter(function(item){ return item.color === toPlayColor && item.value === toPlayValue; }); 
 
@@ -340,7 +336,7 @@ function drawCards(bot, message, playerName, count){
 }
 
 function getUnoCard(standardCard){
-    var value = valueMappings[standardCard.value] || (standardCard.value - 1),
+    var value = valueMappings[standardCard.value] || (standardCard.value - 1) + '',
         color = suitMappings[standardCard.suit];
 
     if (standardCard.value === 'ACE'){
