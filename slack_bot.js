@@ -132,7 +132,7 @@ function playCard(bot, message){
 
     var cardToPlay = selectedCards[0];
 
-    if (cardToPlay.color !== 'wild' && (cardToPlay.color !== game.currentCard.color || cardToPlay.value !== game.currentCard.value)){
+    if (cardToPlay.color !== 'wild' && cardToPlay.color !== game.currentCard.color && cardToPlay.value !== game.currentCard.value){
         bot.replyPrivate(message, 'You cannot play a ' + toPlayColor + ' ' + toPlayValue + ' on a ' + game.currentCard.color + ' ' + game.currentCard.value);
         return;
     }
