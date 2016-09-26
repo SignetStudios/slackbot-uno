@@ -111,12 +111,15 @@ function beginGame(bot, message){
                         .then(function(result){
                             console.log(result);
 
+                            console.log(result.cards.length + ' cards returned, adding to ' + playerName + ' hand');
+
                             for (var j = 0; j < result.cards.length; j++){
                                 player.cards[j] = getUnoCard(result.cards[j]);
                             }
                         })
                         .then(function(){
                             console.log('Draw request finished');
+                            console.log(player);
                         });
 
                     drawRequests.push(drawRequest);                    
@@ -149,10 +152,15 @@ function getUnoCard(standardCard){
         }
     }
 
-    return {
+    var res = {
         color: color,
         value: value
-    }
+    };
+
+    console.log('standardCard: ' + standardCard);
+    console.log('unoCard: ' + res);
+
+    return res;
 }
 
 function getStandardCard(unoCard){
