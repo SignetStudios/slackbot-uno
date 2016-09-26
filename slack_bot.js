@@ -130,18 +130,15 @@ function playCard(bot, message){
         return;
     }
 
-    console.log(selectedCards);
-    console.log(selectedCards[0]);
+    var cardToPlay = selectedCards[0];
 
-    var cardToplay = selectedCards[0];
-
-    if (cardToPlay.color !== 'wild' && (cardToplay.color !== game.currentCard.color || cardToplay.value !== game.currentCard.value)){
+    if (cardToPlay.color !== 'wild' && (cardToPlay.color !== game.currentCard.color || cardToPlay.value !== game.currentCard.value)){
         bot.replyPrivate(message, 'You cannot play a ' + toPlayColor + ' ' + toPlayValue + ' on a ' + game.currentCard.color + ' ' + game.currentCard.value);
         return;
     }
 
-    player.hand.splice(player.hand.indexOf(cardToplay), 1);
-    game.currentCard = cardToplay;
+    player.hand.splice(player.hand.indexOf(cardToPlay), 1);
+    game.currentCard = cardToPlay;
 
     if (cardToPlay.color === 'wild'){
         bot.replyPrivate(message, 'Type `/uno color [color]` to specify what the new color should be.');
@@ -150,12 +147,12 @@ function playCard(bot, message){
 
     bot.replyPublic(message, playerName + ' played a ' + toPlayColor + ' ' + toPlayValue);
 
-    if (cardToplay.value === 'skip'){
+    if (cardToPlay.value === 'skip'){
         endTurn(bot, message);
         endTurn(bot, message);
-    } else if (cardToplay.value === 'reverse'){
+    } else if (cardToPlay.value === 'reverse'){
         game.turnOrder.reverse();
-    } else if (cardToplay === 'draw 2'){
+    } else if (cardToPlay === 'draw 2'){
         endTurn(bot, message);
         drawCards(bot, message, game.turnOrder[0], 2);
         endTurn(bot, message);
@@ -309,6 +306,7 @@ function beginGame(bot, message){
     }).then(function(){
         Q.allSettled(drawRequests).then(function(){
             announceTurn(bot, message);
+            reportHand(bot, message, true);
         })
     });
 }
@@ -501,7 +499,7 @@ function initializeGame(bot, message){
     }
 
     if (game.initialized){
-        bot.replyPrivate(message, 'There is already an uno game in progress. Type !join to join the game.');
+        bot.replyPrivate(message, 'There is already an uno game in progress. Type `/uno join` to join the game.');
         return;
     }
         
@@ -515,7 +513,7 @@ function initializeGame(bot, message){
     };
     game.turnOrder.push(user);
 
-    bot.replyPublic(message, user + ' has started UNO. Type !join to join the game.');
+    bot.replyPublic(message, user + ' has started UNO. Type `/uno join` to join the game.');
 
     reportTurnOrder(bot, message);
 };
