@@ -1,3 +1,41 @@
+/*
+
+{
+    "attachments": [
+        {
+            "color": "#c3a64f",
+            "pretext": "It is Player1's turn. The current card is:",
+            "text": "4"
+        }]
+}
+
+{
+    "attachments": [
+        {
+            "pretext": "What would you like to do?",
+			"actions": [{
+					"name": "Play",
+					"text": "Play",
+					"type": "button",
+					"value": "Play"
+				}, {
+					"name": "Draw",
+					"text": "Draw",
+					"type": "button",
+					"value": "Draw"
+				}, {
+					"name": "Cards",
+					"text": "View Cards",
+					"type": "button",
+					"value": "Cards"
+				}]
+        }
+    ],
+	"response_type": "ephemeral"
+}
+
+*/
+
 if (!process.env.token) {
     console.log('Error: Specify token in environment');
     process.exit(1);
@@ -54,9 +92,69 @@ controller.hears('start', ['slash_command'], function(bot, message){
     beginGame(bot, message);
 });
 
-controller.hears(['cards', 'draw', 'skip', 'play'], ['slash_command'], function(bot, message){
+controller.hears('play', ['slash_command'], function(bot, message){
+    beginTurn(bot, message);
+});
+
+controller.hears(['cards', 'draw', 'skip'], ['slash_command'], function(bot, message){
     bot.replyPrivate(message, 'I\'m sorry, I\'m afraid I can\'t do that ' + message.user_name);
 });
+
+function beginTurn(bot, message){
+    var game = getGame(bot, message),
+        playerName = message.user_name;
+
+    if (!game){
+        return;
+    }
+
+    var currentPlayer = game.turnOrder[0];
+
+    if (playerName !== currentPlayer){
+        bot.replyPrivate(message, 'It is not your turn.');
+        return;
+    }
+
+    var player = game.players[playerName];
+
+    var hand = [];
+
+    for (var i = 0; i < player.hand.length; i++){
+        var card = player.hand[i];
+        hand.push({
+            "color": colorToHex(card.color),
+            "text": card.value
+        });        
+    }
+
+    bot.replyPrivate(message, {
+        "text": 'Your current hand is:',
+        "attachments": hand
+    });
+
+    bot.replyPrivateDelayed(message, {        
+        "attachments": [
+            {
+                "pretext": "What would you like to do?",
+                "actions": [{
+                        "name": "Play",
+                        "text": "Play",
+                        "type": "button",
+                        "value": "Play"
+                    }, {
+                        "name": "Draw",
+                        "text": "Draw",
+                        "type": "button",
+                        "value": "Draw"
+                    }, {
+                        "name": "Cards",
+                        "text": "View Cards",
+                        "type": "button",
+                        "value": "Cards"
+                }]
+            }]
+        });
+}
 
 function beginGame(bot, message){
     var user = message.user_name,
@@ -142,7 +240,7 @@ function getUnoCard(standardCard){
         color = suitMappings[standardCard.suit];
 
     if (standardCard.value === 'ACE'){
-        color = 'Wild';
+        color = 'wild';
         switch (standardCard.suit){
             case 'CLUBS':
             case 'SPADES':
@@ -165,11 +263,22 @@ function getStandardCard(unoCard){
     
 }
 
+function colorToHex(color){    
+    switch(color){
+        case 'blue': return '#0033cc';
+        case 'red': return '#993300';
+        case 'green': return '#006633';
+        case 'yellow': return '#ffcc00';
+        case 'wild': return '#000000';
+        default: return '';
+    }
+}
+
 function announceTurn(bot, message){
     var game = getGame(bot, message);
 
     bot.replyPublicDelayed(message, 'The current up card is a ' + game.currentCard.color + ' ' + game.currentCard.value);
-    bot.replyPublicDelayed(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType \\uno cards, \\uno draw, \\uno skip or \\uno play.')
+    bot.replyPublicDelayed(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType `\\uno play` to begin your turn.')
 }
 
 function quitGame(bot, message){
