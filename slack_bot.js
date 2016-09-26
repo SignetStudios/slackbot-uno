@@ -16,17 +16,17 @@ var Botkit = require('./lib/Botkit.js'),
     Q = require('q'),
     request = require('request-promise-any');
 
-controller.configureSlackApp({
+/*controller.configureSlackApp({
     clientId: process.env.clientId,
     clientSecret: process.env.clientSecret,
     redirectUri: 'http://signet-studios-uno.herokuapp.com',
     scopes: ['incoming-webhook','team:read','users:read','channels:read','im:read','im:write','groups:read','emoji:read','chat:write:bot']
-})
+})*/
 
 controller.setupWebserver(process.env.PORT, function(err, webserver) {
     controller.createHomepageEndpoint(controller.webserver);
     controller.createWebhookEndpoints(controller.webserver, ['PsRh1Hn3lbVjQpYtf3UaLwKH', '3DHQoAANCPHfQxhLTQs7IGun']);
-    controller.createOauthEndpoints(controller.webserver);
+    //controller.createOauthEndpoints(controller.webserver);
 });
 
 var games = {},
