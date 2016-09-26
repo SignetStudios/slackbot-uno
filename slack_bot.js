@@ -118,7 +118,7 @@ function beginGame(bot, message){
                                 console.log(j);
                                 //console.log(result.cards[j]);
                                 var card = getUnoCard(result.cards[j])
-                                player.cards.push(card);
+                                player.hand.push(card);
                             }
                         })
                         .then(function(){
