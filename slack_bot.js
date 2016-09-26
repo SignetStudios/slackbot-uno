@@ -8,7 +8,7 @@ require('any-promise/register/q');
 var Botkit = require('./lib/Botkit.js'),
     os = require('os'),
     controller = Botkit.slackbot({
-        debug: true
+        //debug: true
     }),
     bot = controller.spawn({
         token: process.env.token
