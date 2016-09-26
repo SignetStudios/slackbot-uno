@@ -104,15 +104,9 @@ function playCard(bot, message){
     }
 
     if (/d(raw ?4)?/i.test(toPlayColor)){
-        console.log('found draw 4');
-        console.log(toPlayColor);
         toPlayColor = 'wild';
         toPlayValue = 'draw 4';
-    }
-
-    if (/w(ild)?/i.test(toPlayColor)){
-        console.log('found wild');
-        console.log(toPlayColor);
+    } else if (/w(ild)?/i.test(toPlayColor)){
         toPlayColor = 'wild';
         toPlayValue = 'wild';
     }
@@ -483,8 +477,14 @@ function reportTurnOrder(bot, message, isPrivate, isDelayed){
         if (i > 1){
             currentOrder = currentOrder + ', ';
         }
+        var playerName = game.turnOrder[i - 1],
+            cardReport = '';
 
-        currentOrder = currentOrder + '\n' + i + '. ' + game.turnOrder[i - 1]; 
+        if (game.started){
+            cardReport = '(' + game.players[playerName].hand.length + ' cards)';
+        }
+
+        currentOrder = currentOrder + '\n' + i + '. ' + playerName + cardReport; 
     }
 
     if (isPrivate){
