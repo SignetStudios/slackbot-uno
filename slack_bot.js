@@ -114,7 +114,9 @@ function beginGame(bot, message){
                             console.log(result.cards.length + ' cards returned, adding to ' + playerName + ' hand');
 
                             for (var j = 0; j < result.cards.length; j++){
-                                player.cards.push(getUnoCard(result.cards[j]));
+                                console.log(result.cards[j]);
+                                var card = getUnoCard(result.cards[j])
+                                player.cards.push();
                             }
                         })
                         .then(function(){
