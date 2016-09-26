@@ -27,27 +27,22 @@ var games = {},
 //TODO: Allow for commands via @mentions as well
 
 controller.hears('new', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
-    //console.log(message);
     initializeGame(bot, message);
 });
 
 controller.hears('join', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
-    console.log(message);
     joinGame(bot, message);
 });
 
 controller.hears('quit', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
-    console.log(message);
     quitGame(bot, message);
 });
 
 controller.hears('order', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
-    console.log(message);
     reportTurnOrder(bot, message, true);
 });
 
 controller.hears('setup', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
-    //console.log(message);
     for (var i = 2; i <= 2; i++){
         var mockUser = 'Player' + i;
 
@@ -56,9 +51,12 @@ controller.hears('setup', ['slash_command'/*, 'direct_mention', 'mention'*/], fu
 });
 
 controller.hears('start', ['slash_command'], function(bot, message){
-    //console.log(message);
     beginGame(bot, message);
 });
+
+controller.hears(['cards', 'draw', 'skip', 'play'], function(bot, message){
+    bot.replyPrivate(message, 'I\'m sorry, I\'m afraid I can\'t do that ' + message.user_name);
+})
 
 function beginGame(bot, message){
     var user = message.user_name,
@@ -102,8 +100,6 @@ function beginGame(bot, message){
         }
     }).then(function(){
         Q.allSettled(drawRequests).then(function(){
-            console.log('All draw requests should be finished by now.');
-            console.log(game);
             announceTurn(bot, message);
         })
     });
@@ -114,32 +110,23 @@ function drawCards(bot, message, playerName, count){
     var game = getGame(bot, message, true);
 
     return request({
-                uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=' + count,
-                json: true
-            })
-        .then(function(result){
-            var player = game.players[playerName];
-            console.log('Drew ' + result.cards.length + ' cards, adding to ' + playerName + ' hand');
-            var cardCount = result.cards.length;
+        uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=' + count,
+        json: true
+    }).then(function(result){
+        var player = game.players[playerName];
+        console.log('Drew ' + result.cards.length + ' cards, adding to ' + playerName + ' hand');
+        var cardCount = result.cards.length;
 
-            for (var j = 0; j < cardCount; j++){
-                var card = getUnoCard(result.cards[j])
-                player.hand.push(card);
-            }
-        })
-        .then(function(){
-            console.log('Draw request finished');
-            console.log(game.players[playerName]);
-        })
-        .catch(function(err){
-            console.log(err);
-        });
+        for (var j = 0; j < cardCount; j++){
+            var card = getUnoCard(result.cards[j])
+            player.hand.push(card);
+        }
+    }).catch(function(err){
+        console.log(err);
+    });
 }
 
 function getUnoCard(standardCard){
-    console.log('standardCard:');
-    console.log(standardCard);
-
     var value = valueMappings[standardCard.value] || (standardCard.value - 1),
         color = suitMappings[standardCard.suit];
 
@@ -157,14 +144,10 @@ function getUnoCard(standardCard){
         }
     }
 
-    var res = {
+    return {
         color: color,
         value: value
     };
-    console.log('unoCard:');
-    console.log(res);
-
-    return res;
 }
 
 function getStandardCard(unoCard){
