@@ -112,13 +112,13 @@ function beginGame(bot, message){
 function drawCards(bot, message, playerName, count){
     console.log('Drawing ' + count + ' cards for ' + playerName);
     var game = getGame(bot, message, true);
-        player = game.players[playerName];
 
     return request({
                 uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=' + count,
                 json: true
             })
         .then(function(result){
+            var player = game.players[playerName];
             console.log('Drew ' + result.cards.length + ' cards, adding to ' + playerName + ' hand');
             var cardCount = result.cards.length;
 
@@ -129,7 +129,7 @@ function drawCards(bot, message, playerName, count){
         })
         .then(function(){
             console.log('Draw request finished');
-            console.log(player);
+            console.log(game.players[playerName]);
         })
         .catch(function(err){
             console.log(err);
