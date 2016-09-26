@@ -25,7 +25,7 @@ controller.configureSlackApp({
 
 controller.setupWebserver(process.env.PORT, function(err, webserver) {
     controller.createHomepageEndpoint(controller.webserver);
-    controller.createWebhookEndpoints(controller.webserver, 'PsRh1Hn3lbVjQpYtf3UaLwKH');
+    controller.createWebhookEndpoints(controller.webserver, ['PsRh1Hn3lbVjQpYtf3UaLwKH', '3DHQoAANCPHfQxhLTQs7IGun']);
     controller.createOauthEndpoints(controller.webserver);
 });
 
