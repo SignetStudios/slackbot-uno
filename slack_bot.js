@@ -119,7 +119,7 @@ function playCard(bot, message){
     }
 
     toPlayColor = {'b': 'blue', 'y': 'yellow', 'g': 'green', 'r': 'red'}[toPlayColor] || toPlayColor;
-    toPlayValue = {'s': 'Skip', 'r': 'Reverse', 'draw2': 'Draw 2'}[toPlayValue] || toPlayValue;
+    toPlayValue = {'s': 'skip', 'r': 'reverse', 'draw2': 'draw 2'}[toPlayValue] || toPlayValue;
 
     var player = game.players[playerName];
 
@@ -129,6 +129,9 @@ function playCard(bot, message){
         bot.replyPrivate(message, 'You don\'t have a ' + toPlayColor + ' ' + toPlayValue);
         return;
     }
+
+    console.log(selectedCards);
+    console.log(selectedCards[0]);
 
     var cardToplay = selectedCards[0];
 
