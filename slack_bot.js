@@ -135,6 +135,9 @@ function beginGame(bot, message){
 }
 
 function getUnoCard(standardCard){
+    console.log('standardCard:');
+    console.log(standardCard);
+
     var value = valueMappings[standardCard.value] || (standardCard.value - 1),
         color = suitMappings[standardCard.suit];
 
@@ -156,9 +159,6 @@ function getUnoCard(standardCard){
         color: color,
         value: value
     };
-
-    console.log('standardCard:');
-    console.log(standardCard);
     console.log('unoCard:');
     console.log(res);
 
