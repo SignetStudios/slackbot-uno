@@ -29,12 +29,13 @@ controller.setupWebserver(process.env.PORT, function(err, webserver) {
     controller.createOauthEndpoints(controller.webserver);
 });
 
-bot.api.team.info(function(){}, function(err, res){
-    controller.saveTeam(res.team, function(){
-        console.log("Saved team info.");
+bot.api.team.info({}, (err, res) => {
+    controller.storage.teams.save({id: res.team.id}, (err) => {
+        if (err) {
+            console.error(err)
+        }
     })
 })
-
 var games = {},
     suitMappings = {'HEARTS': 'red', 'SPADES': 'green', 'CLUBS': 'yellow', 'DIAMONDS': 'blue'},
     valueMappings = {'JACK': 'Draw 2', 'QUEEN': 'Skip', 'KING': 'Reverse'};
