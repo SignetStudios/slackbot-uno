@@ -112,16 +112,21 @@ function beginGame(bot, message){
                             console.log(result);
 
                             console.log(result.cards.length + ' cards returned, adding to ' + playerName + ' hand');
+                            var cardCount = result.cards.length;
 
-                            for (var j = 0; j < result.cards.length; j++){
-                                console.log(result.cards[j]);
+                            for (var j = 0; j < cardCount; j++){
+                                console.log(j);
+                                //console.log(result.cards[j]);
                                 var card = getUnoCard(result.cards[j])
-                                player.cards.push();
+                                player.cards.push(card);
                             }
                         })
                         .then(function(){
                             console.log('Draw request finished');
                             console.log(player);
+                        })
+                        .catch(function(err){
+                            console.log(err);
                         });
 
                     drawRequests.push(drawRequest);                    
