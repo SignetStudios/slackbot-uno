@@ -145,7 +145,6 @@ function playCard(bot, message){
         return;
     }
 
-    bot.replyPublic(message, playerName + ' played a ' + toPlayColor + ' ' + toPlayValue);
 
     if (cardToPlay.value === 'skip'){
         endTurn(bot, message);
@@ -161,6 +160,7 @@ function playCard(bot, message){
     }
     
     reportHand(bot, message, true);
+    bot.replyPublic(message, playerName + ' played a ' + toPlayColor + ' ' + toPlayValue);
     announceTurn(bot, message);
 }
 
@@ -179,7 +179,7 @@ function setWildColor(bot, message){
     }
 
     if (game.currentCard.color !== 'wild'){
-        bot.replyPrivate(message, 'You have\'t play a wild.');
+        bot.replyPrivate(message, 'You have\'t played a wild.');
     }
 
     var currentPlayer = game.turnOrder[0];
@@ -193,9 +193,11 @@ function setWildColor(bot, message){
     
     newColor = {'b': 'blue', 'y': 'yellow', 'g': 'green', 'r': 'red'}[newColor] || newColor;
 
+    bot.replyPrivate(message, 'Setting the color to ' + newColor);
+
     game.currentCard.color = newColor;
 
-    bot.replyPublic(message, playerName + ' played a ' + game.currentCard.value + ' and chose ' + newColor + ' as the new color.');
+    bot.replyPublicDelayed(message, playerName + ' played a ' + game.currentCard.value + ' and chose ' + newColor + ' as the new color.');
 
     endTurn(bot, message);
 
