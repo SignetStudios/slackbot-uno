@@ -27,7 +27,7 @@ var games = {},
 //TODO: Allow for commands via @mentions as well
 
 controller.hears('new', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
-    console.log(message);
+    //console.log(message);
     initializeGame(bot, message);
 });
 
@@ -47,7 +47,7 @@ controller.hears('order', ['slash_command'/*, 'direct_mention', 'mention'*/], fu
 });
 
 controller.hears('setup', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
-    console.log(message);
+    //console.log(message);
     for (var i = 2; i <= 2; i++){
         var mockUser = 'Player' + i;
 
@@ -56,7 +56,7 @@ controller.hears('setup', ['slash_command'/*, 'direct_mention', 'mention'*/], fu
 });
 
 controller.hears('start', ['slash_command'], function(bot, message){
-    console.log(message);
+    //console.log(message);
     beginGame(bot, message);
 });
 
@@ -87,7 +87,7 @@ function beginGame(bot, message){
     game.started = true;
     var drawRequests = [];
 
-    bot.replyPublic(message, 'Game has started! Shuffling and dealing the hands.');
+    bot.replyPublic(message, 'Game has started! Shuffling the deck and dealing the hands.');
 
     //Create the deck
     request({
@@ -97,9 +97,9 @@ function beginGame(bot, message){
         .then(function(result){
                 game.deckId = result.deck_id;
             })
-        .then(function(){
+        /*.then(function(){
                 console.log('Deck request finished');
-            })
+            })*/
         .then(function(){
                 for (playerName in game.players){
                     console.log('beginning draw for ' + playerName);
@@ -114,7 +114,7 @@ function beginGame(bot, message){
                             console.log(result.cards.length + ' cards returned, adding to ' + playerName + ' hand');
 
                             for (var j = 0; j < result.cards.length; j++){
-                                player.cards[j] = getUnoCard(result.cards[j]);
+                                player.cards.push(getUnoCard(result.cards[j]));
                             }
                         })
                         .then(function(){
@@ -157,8 +157,10 @@ function getUnoCard(standardCard){
         value: value
     };
 
-    console.log('standardCard: ' + standardCard);
-    console.log('unoCard: ' + res);
+    console.log('standardCard:');
+    console.log(standardCard);
+    console.log('unoCard:');
+    console.log(res);
 
     return res;
 }
