@@ -54,9 +54,9 @@ controller.hears('start', ['slash_command'], function(bot, message){
     beginGame(bot, message);
 });
 
-controller.hears(['cards', 'draw', 'skip', 'play'], function(bot, message){
+controller.hears(['cards', 'draw', 'skip', 'play'], ['slash_command'], function(bot, message){
     bot.replyPrivate(message, 'I\'m sorry, I\'m afraid I can\'t do that ' + message.user_name);
-})
+});
 
 function beginGame(bot, message){
     var user = message.user_name,
