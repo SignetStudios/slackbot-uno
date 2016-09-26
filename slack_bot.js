@@ -1,41 +1,3 @@
-/*
-
-{
-    "attachments": [
-        {
-            "color": "#c3a64f",
-            "pretext": "It is Player1's turn. The current card is:",
-            "text": "4"
-        }]
-}
-
-{
-    "attachments": [
-        {
-            "pretext": "What would you like to do?",
-			"actions": [{
-					"name": "Play",
-					"text": "Play",
-					"type": "button",
-					"value": "Play"
-				}, {
-					"name": "Draw",
-					"text": "Draw",
-					"type": "button",
-					"value": "Draw"
-				}, {
-					"name": "Cards",
-					"text": "View Cards",
-					"type": "button",
-					"value": "Cards"
-				}]
-        }
-    ],
-	"response_type": "ephemeral"
-}
-
-*/
-
 if (!process.env.token) {
     console.log('Error: Specify token in environment');
     process.exit(1);
@@ -99,6 +61,11 @@ controller.hears('play', ['slash_command'], function(bot, message){
 controller.hears(['cards', 'draw', 'skip'], ['slash_command'], function(bot, message){
     bot.replyPrivate(message, 'I\'m sorry, I\'m afraid I can\'t do that ' + message.user_name);
 });
+
+controller.on('interactive_message_callback', function(bot, message){
+    console.log(message);
+    bot.reply(message, 'Button clicked!');
+})
 
 function beginTurn(bot, message){
     var game = getGame(bot, message),
@@ -266,9 +233,9 @@ function getStandardCard(unoCard){
 function colorToHex(color){    
     switch(color){
         case 'blue': return '#0033cc';
-        case 'red': return '#993300';
+        case 'red': return '#ff3300';
         case 'green': return '#006633';
-        case 'yellow': return '#ffcc00';
+        case 'yellow': return '#ffff00';
         case 'wild': return '#000000';
         default: return '';
     }
