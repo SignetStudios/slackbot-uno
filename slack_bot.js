@@ -1,8 +1,3 @@
-if (!process.env.SLACK_TOKEN) {
-    console.log('Error: Specify token in environment');
-    process.exit(1);
-}
-
 require('any-promise/register/q');
 
 var Botkit = require('./lib/Botkit.js'),
@@ -10,8 +5,9 @@ var Botkit = require('./lib/Botkit.js'),
     controller = Botkit.slackbot({
         //debug: true
     }),
+    token = process.env.SLACK_TOKEN,
     bot = Botkit.slackbot({
-        token: process.env.SLACK_TOKEN
+        token: token
     }),
     Q = require('q'),
     request = require('request-promise-any');
@@ -33,6 +29,8 @@ if (token) {
   console.log('Starting in Beep Boop multi-team mode')
   require('beepboop-botkit').start(controller, { debug: true })
 }
+
+//------------Main code begins here-----------------
 
 var games = {},
     suitMappings = {'HEARTS': 'red', 'SPADES': 'green', 'CLUBS': 'yellow', 'DIAMONDS': 'blue'},
