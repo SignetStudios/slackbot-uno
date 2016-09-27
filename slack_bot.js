@@ -58,7 +58,7 @@ controller.hears('start', ['slash_command'], function(bot, message){
 });
 
 //The following should hear most combinations of cards that can be played
-controller.hears('^play(?: (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?|w(?:ild)?|d(?:raw ?4)?)(?: ?([1-9]|s(?:kip)?|r(?:everse)?|d(?:raw ?[2,4])?))?)?$', ['slash_command'], function(bot, message){
+controller.hears('^play(?: (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?|w(?:ild)?|d(?:raw ?4)?)(?: ?([1-9]|s(?:kip)?|r(?:everse)?|d(?:raw ?2)?))?)?$', ['slash_command'], function(bot, message){
     playCard(bot, message);
 });
 
@@ -70,7 +70,7 @@ controller.hears(['draw'], ['slash_command'], function(bot, message){
     drawCard(bot, message);
 });
 
-controller.hears(['cards', 'draw', 'skip'], ['slash_command'], function(bot, message){
+controller.hears(['pass'], ['slash_command'], function(bot, message){
     bot.replyPrivate(message, 'I\'m sorry, I\'m afraid I can\'t do that ' + message.user_name);
 });
 
@@ -313,6 +313,7 @@ function beginGame(bot, message){
         }
         
         //draw the starting card as well
+        //TODO: Figure out what to do if the first card is a wild/ACE
         var drawRequest = request({
             uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=1',
             json: true
@@ -345,7 +346,8 @@ function drawCard(bot, message){
 
     drawCards(bot, message, playerName, 1)
         .then(function(){
-            reportHand(bot, message);
+            bot.replyPrivate(message, 'You now have' + game.players[playerName].hand.length + ' cards.')
+            reportHand(bot, message, true);
         });
 }
 
@@ -426,8 +428,14 @@ function colorToHex(color){
 function announceTurn(bot, message){
     var game = getGame(bot, message);
 
-    bot.replyPublicDelayed(message, 'The current up card is a ' + game.currentCard.color + ' ' + game.currentCard.value);
-    bot.replyPublicDelayed(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType `/uno play [card]`, `/uno draw` or `/uno cards` to begin your turn.')
+    bot.replyPublicDelayed(message, {
+        "text": 'The current up card is:',
+        "attachments": {            
+            "color": colorToHex(game.currentCard.color),
+            "text": game.currentCard.color + ' ' + game.currentCard.value        
+        }
+    });
+    bot.replyPublicDelayed(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType `/uno play [card]`, `/uno draw` or `/uno status` to begin your turn.')
 }
 
 function quitGame(bot, message){
