@@ -1,6 +1,4 @@
-require('any-promise/register/q');
-
-var Botkit = require('./lib/Botkit.js'),
+var Botkit = require('Botkit'),
     os = require('os'),
     controller = Botkit.slackbot({
         //debug: true
@@ -9,8 +7,8 @@ var Botkit = require('./lib/Botkit.js'),
     bot = Botkit.slackbot({
         token: token
     }),
-    Q = require('q'),
-    request = require('request-promise-any');
+    request = require('request-promise'),
+    Promise = require('bluebird');
 
 if (token) {
   console.log('Starting in single-team mode')
@@ -338,7 +336,7 @@ function beginGame(bot, message){
         drawRequests.push(drawRequest);
 
     }).then(function(){
-        Q.allSettled(drawRequests).then(function(){
+        Promise.all(drawRequests).then(function(){
             announceTurn(bot, message);
             reportHand(bot, message, true);
         })
