@@ -2,7 +2,7 @@
   "name": "slackbot-uno",
   "version": "0.0.1",
   "description": "",
-  "main": "slack_bot.js",
+  "main": "node slack_bot.js",
   "dependencies": {
     "async": "^2.0.0-rc.5",
     "back": "^1.0.1",
