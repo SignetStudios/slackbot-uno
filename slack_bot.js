@@ -4,6 +4,7 @@ if (!process.env.token) {
 }
 
 require('any-promise/register/q');
+require('newrelic');
 
 var Botkit = require('./lib/Botkit.js'),
     os = require('os'),
