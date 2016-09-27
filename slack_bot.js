@@ -430,10 +430,10 @@ function announceTurn(bot, message){
 
     bot.replyPublicDelayed(message, {
         "text": 'The current up card is:',
-        "attachments": {            
+        "attachments": [{            
             "color": colorToHex(game.currentCard.color),
             "text": game.currentCard.color + ' ' + game.currentCard.value        
-        }
+        }]
     });
     bot.replyPublicDelayed(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType `/uno play [card]`, `/uno draw` or `/uno status` to begin your turn.')
 }
