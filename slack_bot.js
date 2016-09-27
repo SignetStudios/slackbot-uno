@@ -563,7 +563,9 @@ function reportTurnOrder(bot, message, isPrivate, isDelayed){
         return;
     }
 
-    reportCurrentCard(bot, message, isPrivate, isDelayed);
+    if (game.started){
+        reportCurrentCard(bot, message, isPrivate, isDelayed);
+    }
 
     var currentOrder = '';
 
