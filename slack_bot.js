@@ -134,13 +134,18 @@ function playCard(bot, message){
     var cardToPlay = selectedCards[0];
 
 
-    if (cardToPlay.color !== 'wild' && 
+    if (!game.playAnything &&
+        cardToPlay.color !== 'wild' && 
         cardToPlay.color !== game.currentCard.color &&
         (game.currentCard.value === 'wild' ||
         game.currentCard.value === 'draw 4' ||         
         cardToPlay.value !== game.currentCard.value)){
             bot.replyPrivate(message, 'You cannot play a ' + toPlayColor + ' ' + toPlayValue + ' on a ' + game.currentCard.color + ' ' + game.currentCard.value);
             return;
+    }
+
+    if (game.playAnything){
+        game.playAnything = false;
     }
 
     player.hand.splice(player.hand.indexOf(cardToPlay), 1);
@@ -313,12 +318,12 @@ function beginGame(bot, message){
         }
         
         //draw the starting card as well
-        //TODO: Figure out what to do if the first card is a wild/ACE
         var drawRequest = request({
             uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=1',
             json: true
-        }).then(function(result){
+        }).then(function(result){            
             game.currentCard = getUnoCard(result.cards[0]);
+            game.playAnything = game.currentCard.color === 'wild';
         });
 
         drawRequests.push(drawRequest);
