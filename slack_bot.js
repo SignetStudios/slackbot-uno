@@ -42,7 +42,7 @@ controller.hears('quit', ['slash_command'/*, 'direct_mention', 'mention'*/], fun
 });
 
 controller.hears('status', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
-    reportTurnOrder(bot, message, true);
+    reportTurnOrder(bot, message, true, false);
 });
 
 controller.hears('setup', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
@@ -433,6 +433,10 @@ function colorToHex(color){
 function announceTurn(bot, message){
     var game = getGame(bot, message);
 
+    if (!game){
+        return;
+    }
+
     bot.replyPublicDelayed(message, {
         "text": 'The current up card is:',
         "attachments": [{            
@@ -473,10 +477,11 @@ function quitGame(bot, message){
 
     if (Object.keys(game.players).length === 1){
         game.started = false;
-        bot.replyPublicDelayed(message, 'Only one player remaining. Waiting for more players.');        
+        bot.replyPublicDelayed(message, 'Only one player remaining. Waiting for more players.');  
+        return;      
     }
 
-    reportTurnOrder(bot, message);
+    reportTurnOrder(bot, message, false, true);
 }
 
 function joinGame(bot, message, userName){
@@ -501,7 +506,7 @@ function joinGame(bot, message, userName){
 
     bot.replyPublic(message, user + ' has joined the game.');
 
-    reportTurnOrder(bot, message);
+    reportTurnOrder(bot, message, false, true);
 }
 
 function getGame(bot, message, suppressReport){
@@ -518,12 +523,47 @@ function getGame(bot, message, suppressReport){
     return games[channel];
 }
 
+function reportCurrentCard(bot, message, isPrivate, isDelayed){
+    var game = getGame(bot, message);
+
+    if (!game){
+        return;
+    }
+
+    var msg = {
+        "text": 'The current up card is:',
+        "attachments": [{            
+            "color": colorToHex(game.currentCard.color),
+            "text": game.currentCard.color + ' ' + game.currentCard.value        
+        }]
+    };
+
+    if (isPrivate){
+        if (isDelayed){
+            bot.replyPrivateDelayed(message, msg);
+            return;
+        }
+
+        bot.replyPrivate(message, msg);
+        return;
+    }
+
+    if (isDelayed){
+        bot.replyPublicDelayed(message, msg);
+        return;
+    }
+
+    bot.replyPublic(message, msg);
+}
+
 function reportTurnOrder(bot, message, isPrivate, isDelayed){
     var game = getGame(bot, message);
 
     if (!game){
         return;
     }
+
+    reportCurrentCard(bot, message, isPrivate, isDelayed);
 
     var currentOrder = '';
 
@@ -542,13 +582,8 @@ function reportTurnOrder(bot, message, isPrivate, isDelayed){
     }
 
     if (isPrivate){
-        if (isDelayed){
-            bot.replyPrivateDelayed(message, 'Current playing order:\n' + currentOrder);
-        } else{
-            bot.replyPrivate(message, 'Current playing order:\n' + currentOrder);
-        }        
-    }
-    else{
+        bot.replyPrivateDelayed(message, 'Current playing order:\n' + currentOrder);
+    } else {
         bot.replyPublicDelayed(message, 'Current playing order:\n' + currentOrder);
     }
 }
@@ -582,7 +617,7 @@ function initializeGame(bot, message){
 
     bot.replyPublic(message, user + ' has started UNO. Type `/uno join` to join the game.');
 
-    reportTurnOrder(bot, message);
+    reportTurnOrder(bot, message, false, true);
 };
 
 function newGame(){
