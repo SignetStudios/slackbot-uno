@@ -1,28 +1,38 @@
-if (!process.env.token) {
+if (!process.env.SLACK_TOKEN) {
     console.log('Error: Specify token in environment');
     process.exit(1);
 }
 
 require('any-promise/register/q');
-require('newrelic');
 
 var Botkit = require('./lib/Botkit.js'),
     os = require('os'),
     controller = Botkit.slackbot({
         //debug: true
     }),
-    bot = controller.spawn({
-        token: process.env.token
-    }).startRTM(),
+    bot = Botkit.slackbot({
+        token: process.env.SLACK_TOKEN
+    }),
     Q = require('q'),
     request = require('request-promise-any');
 
-//TODO: Set up bot as an actual Slack App, to make use of interactive message callbacks
+if (token) {
+  console.log('Starting in single-team mode')
+  controller.spawn({
+    token: token,
+    retry: Infinity
+  }).startRTM(function (err, bot, payload) {
+    if (err) {
+      throw new Error(err)
+    }
 
-controller.setupWebserver(process.env.PORT, function(err, webserver) {
-    controller.createHomepageEndpoint(controller.webserver);
-    controller.createWebhookEndpoints(controller.webserver, ['PsRh1Hn3lbVjQpYtf3UaLwKH', '3DHQoAANCPHfQxhLTQs7IGun']);
-});
+    console.log('Connected to Slack RTM')
+  })
+// Otherwise assume multi-team mode - setup beep boop resourcer connection
+} else {
+  console.log('Starting in Beep Boop multi-team mode')
+  require('beepboop-botkit').start(controller, { debug: true })
+}
 
 var games = {},
     suitMappings = {'HEARTS': 'red', 'SPADES': 'green', 'CLUBS': 'yellow', 'DIAMONDS': 'blue'},
