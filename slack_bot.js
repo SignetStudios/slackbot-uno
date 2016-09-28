@@ -13,31 +13,31 @@ var Botkit = require('botkit'),
     VERIFY_TOKEN = process.env.SLACK_VERIFY_TOKEN;
 
 if (TOKEN) {
-  console.log('Starting in single-team mode')
+  console.log('Starting in single-team mode');
   controller.spawn({
     token: TOKEN,
     retry: Infinity
   }).startRTM(function (err, bot, payload) {
     if (err) {
-      throw new Error(err)
+      throw new Error(err);
     }
 
-    console.log('Connected to Slack RTM')
-  })
+    console.log('Connected to Slack RTM');
+  });
 // Otherwise assume multi-team mode - setup beep boop resourcer connection
 } else {
-  console.log('Starting in Beep Boop multi-team mode')
-  require('beepboop-botkit').start(controller, { debug: true })
+  console.log('Starting in Beep Boop multi-team mode');
+  require('beepboop-botkit').start(controller, { debug: true });
 }
 
 controller.setupWebserver(PORT, function (err, webserver) {
   if (err) {
-    console.error(err)
-    process.exit(1)
+    console.error(err);
+    process.exit(1);
   }
 
   // Setup our slash command webhook endpoints
-  controller.createWebhookEndpoints(webserver)
+  controller.createWebhookEndpoints(webserver);
 });
 
 //------------Main code begins here-----------------
@@ -83,7 +83,7 @@ controller.hears('^play(?: (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?|w(?:ild)?|
 
 controller.hears('^color (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?)', ['slash_command'], function(bot, message){
     setWildColor(bot, message);
-})
+});
 
 controller.hears(['draw'], ['slash_command'], function(bot, message){
     drawCard(bot, message);
@@ -333,14 +333,14 @@ function beginGame(bot, message){
     }).then(function(result){
         game.deckId = result.deck_id;
     }).then(function(){
-        for (playerName in game.players){
+        for (var playerName in game.players){
             var drawRequest = drawCards(bot, message, playerName, 7);
 
             drawRequests.push(drawRequest);                    
         }
         
         //draw the starting card as well
-        var drawRequest = request({
+        var startingCardRequest = request({
             uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=1',
             json: true
         }).then(function(result){            
@@ -348,12 +348,12 @@ function beginGame(bot, message){
             game.playAnything = game.currentCard.color === 'wild';
         });
 
-        drawRequests.push(drawRequest);
+        drawRequests.push(startingCardRequest);
     }).then(function(){
         Promise.all(drawRequests).then(function(){
             announceTurn(bot, message);
             reportHand(bot, message, true);
-        })
+        });
     });
 }
 
@@ -372,7 +372,7 @@ function drawCard(bot, message){
 
     drawCards(bot, message, playerName, 1)
         .then(function(){
-            bot.replyPrivate(message, 'You now have ' + game.players[playerName].hand.length + ' cards.')
+            bot.replyPrivate(message, 'You now have ' + game.players[playerName].hand.length + ' cards.');
             reportHand(bot, message, true);
         });
 }
@@ -394,7 +394,7 @@ function drawCards(bot, message, playerName, count){
         var cardCount = result.cards.length;
 
         for (var j = 0; j < cardCount; j++){
-            var card = getUnoCard(result.cards[j])
+            var card = getUnoCard(result.cards[j]);
             player.hand.push(card);
         }
 
@@ -468,7 +468,7 @@ function announceTurn(bot, message){
             "text": game.currentCard.color + ' ' + game.currentCard.value        
         }]
     });
-    bot.replyPublicDelayed(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType `/uno play [card]`, `/uno draw` or `/uno status` to begin your turn.')
+    bot.replyPublicDelayed(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType `/uno play [card]`, `/uno draw` or `/uno status` to begin your turn.');
 }
 
 function quitGame(bot, message){
@@ -509,8 +509,7 @@ function quitGame(bot, message){
 }
 
 function joinGame(bot, message, userName){
-    var user = userName || message.user_name,
-        channel = message.channel;
+    var user = userName || message.user_name;
 
     var game = getGame(bot, message);
 
@@ -644,7 +643,7 @@ function initializeGame(bot, message){
     bot.replyPublic(message, user + ' has started UNO. Type `/uno join` to join the game.');
 
     reportTurnOrder(bot, message, false, true);
-};
+}
 
 function newGame(){
     return {
