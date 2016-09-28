@@ -538,9 +538,11 @@ function joinGame(bot, message, userName){
 }
 
 function getGame(bot, message, suppressReport){
-    var channel = message.channel;
+    var game = controller.storage.channels.get(message.channel, function(err){
+        console.log(err);
+    });
 
-    if (!games[channel] || !games[channel].initialized){
+    if (!game || !game.initialized){
         if (!suppressReport)
         {
             bot.replyPrivate(message, 'There is no game yet.');
@@ -548,7 +550,7 @@ function getGame(bot, message, suppressReport){
         return undefined;
     }
 
-    return games[channel];
+    return game;
 }
 
 function reportCurrentCard(bot, message, isPrivate, isDelayed){
