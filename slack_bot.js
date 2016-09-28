@@ -3,17 +3,19 @@ var Botkit = require('botkit'),
     controller = Botkit.slackbot({
         debug: true
     }),
-    token = process.env.SLACK_TOKEN,
+    TOKEN = process.env.SLACK_TOKEN,
     bot = Botkit.slackbot({
         token: token
     }),
     request = require('request-promise'),
-    Promise = require('bluebird');
+    Promise = require('bluebird'),
+    PORT = process.env.PORT || 8080,
+    VERIFY_TOKEN = process.env.SLACK_VERIFY_TOKEN;
 
-if (token) {
+if (TOKEN) {
   console.log('Starting in single-team mode')
   controller.spawn({
-    token: token,
+    token: TOKEN,
     retry: Infinity
   }).startRTM(function (err, bot, payload) {
     if (err) {
@@ -27,6 +29,17 @@ if (token) {
   console.log('Starting in Beep Boop multi-team mode')
   require('beepboop-botkit').start(controller, { debug: true })
 }
+
+controller.setupWebserver(PORT, function (err, webserver) {
+  if (err) {
+    console.error(err)
+    process.exit(1)
+  }
+
+  webserver.use(logger('tiny'))
+  // Setup our slash command webhook endpoints
+  controller.createWebhookEndpoints(webserver, SLACK_VERIFY_TOKEN)
+});
 
 //------------Main code begins here-----------------
 
