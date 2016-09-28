@@ -592,6 +592,7 @@ function saveGame(botInfo, game, callback){
             console.log('Error saving: ' + err);
             return;
         }
+        console.log(arguments);
         console.log(game.id + ' saved.');
         
         if (callback){
