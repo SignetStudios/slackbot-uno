@@ -538,6 +538,8 @@ function joinGame(bot, message, userName){
 
 function getGame(bot, message, suppressReport){
     var game = controller.storage.channels.get(message.channel);
+    console.log(game);
+        
         
     if (!game || !game.initialized){
         if (!suppressReport)
@@ -593,7 +595,7 @@ function reportCurrentCard(bot, message, isPrivate, isDelayed){
 }
 
 function reportTurnOrder(bot, message, isPrivate, isDelayed){
-    var game = getGame(bot, message);
+    var game = getGame(bot, message, isPrivate, isDelayed);
 
     if (!game){
         return;
