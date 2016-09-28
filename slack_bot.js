@@ -14,6 +14,8 @@ var Botkit = require('botkit'),
     PORT = process.env.PORT || 8080,
     VERIFY_TOKEN = process.env.SLACK_VERIFY_TOKEN;
 
+redis.auth(process.env.REDIS_PASSWORD);
+
 if (TOKEN) {
   console.log('Starting in single-team mode');
   controller.spawn({
