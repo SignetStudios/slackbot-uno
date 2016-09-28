@@ -1,7 +1,8 @@
 var Botkit = require('botkit'),
     os = require('os'),
     controller = Botkit.slackbot({
-        //debug: true
+        //debug: true,
+        json_file_store: '/data'
     }),
     TOKEN = process.env.SLACK_TOKEN,
     bot = Botkit.slackbot({

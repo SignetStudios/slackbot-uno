@@ -1,16 +1,22 @@
 name: Unobot
 description: Play Uno with Unobot!
 #background: resources/background.png
-#config:
-#  - name: OPTION
-#    friendly_name: Some Unnecessary Option
-#    info: This is an unnecessary option
-#    default: the default value
-#  - name: SECRET
-#    friendly_name: Shhhh
-#    info: This is an secret option
-#    type: secret
-#    default: not secret though
+config:
+  - name: REDIS_HOST
+    friendly_name: REDIS Host
+    info: Host for REDIS
+    type: text
+    global: true
+  - name: REDIS_PORT
+    friendly_name: REDIS Port
+    info: Port for REDIS
+    type: text
+    global: true
+  - name: REDIS_PASSWORD
+    friendly_name: REDIS Password
+    info: Password for REDIS
+    type: secret
+    global: true
 #screenshots:
 #  - screenshot: resources/screenshot1.png
 #  - screenshot: resources/screenshot2.jpg
