@@ -67,6 +67,11 @@ var games = {},
 controller.hears('new', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
     getGame({bot, message}, true, initializeGame);
 });
+
+controller.hears('reset thisisthepassword', ['slash_command'], function(bot, message){
+    getGame({bot, message}, true, resetGame);
+});
+
 /*
 controller.hears('join', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
     joinGame(bot, message);
@@ -690,6 +695,13 @@ function newGame(){
         turnOrder: [],
         currentCard: {}
     };
+}
+
+function resetGame(botInfo, game){
+    game = newGame();
+    game.id = botInfo.message.channel;
+    botInfo.bot.replyPrivate(botInfo.message, 'Game for this channel reset.');
+    saveGame(botInfo, game);
 }
 
 /*
