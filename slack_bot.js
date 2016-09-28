@@ -184,8 +184,10 @@ function playCard(bot, message){
         game.turnOrder.reverse();
     } else if (cardToPlay === 'draw 2'){
         endTurn(bot, message);
-        drawCards(bot, message, game.turnOrder[0], 2);
-        endTurn(bot, message);
+        drawCards(bot, message, game.turnOrder[0], 2)
+            .then(function(){
+                endTurn(bot, message);
+            });
     } else{
         endTurn(bot, message);
     }
@@ -253,6 +255,7 @@ function endTurn(bot, message){
         return;
     }
 
+    console.log('Ending turn for ' + game.turnOrder[0]);
     game.turnOrder.push(game.turnOrder.shift());
 }
 
@@ -346,7 +349,6 @@ function beginGame(bot, message){
         });
 
         drawRequests.push(drawRequest);
-
     }).then(function(){
         Promise.all(drawRequests).then(function(){
             announceTurn(bot, message);
