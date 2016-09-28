@@ -183,8 +183,8 @@ function playCard(bot, message){
     } else if (cardToPlay.value === 'reverse'){
         game.turnOrder.reverse();
     } else if (cardToPlay === 'draw 2'){
+        drawCards(bot, message, game.turnOrder[1], 2);
         endTurn(bot, message);
-        drawCards(bot, message, game.turnOrder[0], 2);
         endTurn(bot, message);
     } else{
         endTurn(bot, message);
