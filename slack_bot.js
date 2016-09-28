@@ -554,7 +554,13 @@ function joinGame(bot, message, userName){
 function getGame(botInfo, suppressNotice, callback){
     var channel = botInfo.message.channel;
 
-    controller.storage.channels.get(channel, function(game){
+    controller.storage.channels.get(channel, function(err, game){
+        if (err){
+            console.log(err);
+            botInfo.bot.replyPrivate(botInfo.message, 'There was a problem retrieving the game.');
+            return;
+        }
+        
         if (!game || !game.initialized){
             if (!suppressNotice){
                 botInfo.bot.replyPrivate(botInfo.message, 'There is no game yet.');
