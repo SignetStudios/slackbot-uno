@@ -1,13 +1,14 @@
 var Botkit = require('botkit'),
     os = require('os'),
+    redis = require('botkit-storage-redis')({
+        host: process.env.REDIS_HOST,
+        port: process.env.REDIS_PORT
+    }),
     controller = Botkit.slackbot({
-        //debug: true,
-        json_file_store: '/data'
+        debug: true,
+        storage: redis
     }),
     TOKEN = process.env.SLACK_TOKEN,
-    bot = Botkit.slackbot({
-        token: TOKEN
-    }),
     request = require('request-promise'),
     Promise = require('bluebird'),
     PORT = process.env.PORT || 8080,
