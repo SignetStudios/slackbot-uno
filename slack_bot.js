@@ -55,10 +55,12 @@ var //games = {},
 //TODO: Allow for commands via @mentions as well
 
 controller.hears('new', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
+    console.log('new game');
     initializeGame(bot, message);
 });
 
 controller.hears('join', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
+    console.log('join game');
     joinGame(bot, message);
 });
 
