@@ -561,6 +561,9 @@ function getGame(botInfo, suppressNotice, callback){
             return;
         }
         
+        console.log('Game info retrieved:');
+        console.log(game);
+        
         if (!game || !game.initialized){
             if (!suppressNotice){
                 botInfo.bot.replyPrivate(botInfo.message, 'There is no game yet.');
