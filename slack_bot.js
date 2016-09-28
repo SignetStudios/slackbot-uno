@@ -55,7 +55,7 @@ var //games = {},
 //TODO: Allow for commands via @mentions as well
 
 controller.hears('new', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
-    console.log('new game');
+    bot.replyPrivate(message, 'Attempting to begin new game');
     initializeGame(bot, message);
 });
 
@@ -641,7 +641,7 @@ function initializeGame(bot, message){
         var user = message.user_name;
     
         if (game && game.initialized){
-            bot.replyPrivate(message, 'There is already an uno game in progress. Type `/uno join` to join the game.');
+            bot.replyPrivateDelayed(message, 'There is already an uno game in progress. Type `/uno join` to join the game.');
             return;
         }
             
@@ -655,7 +655,7 @@ function initializeGame(bot, message){
         };
         game.turnOrder.push(user);
     
-        bot.replyPublic(message, user + ' has started UNO. Type `/uno join` to join the game.');
+        bot.replyPublicDelayed(message, user + ' has started UNO. Type `/uno join` to join the game.');
     
         saveGame(bot, message, game).then(function(){
             reportTurnOrder(bot, message, false, true);
