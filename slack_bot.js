@@ -3,7 +3,8 @@ var Botkit = require('botkit'),
     redis = require('botkit-storage-redis')({
         host: process.env.REDIS_HOST,
         port: process.env.REDIS_PORT,
-        password: process.env.REDIS_PASSWORD
+        password: process.env.REDIS_PASSWORD,
+        
     }),
     controller = Botkit.slackbot({
         //debug: true,
@@ -594,6 +595,17 @@ function saveGame(botInfo, game, callback){
         }
         console.log(arguments);
         console.log(game.id + ' saved.');
+        
+        controller.storage.channels.all(function(err, data){
+            if (err){
+                console.log(err);
+            }
+            
+            console.log('Data currently in storage:');
+            for (var i = data.length; i < data.length; i++){
+                console.log(data[i]);
+            }
+        });
         
         if (callback){
             callback();
