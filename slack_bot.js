@@ -6,7 +6,7 @@ var Botkit = require('botkit'),
         password: process.env.REDIS_PASSWORD
     }),
     controller = Botkit.slackbot({
-        debug: true,
+        //debug: true,
         storage: redis
     }),
     TOKEN = process.env.SLACK_TOKEN,
