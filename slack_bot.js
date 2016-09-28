@@ -72,25 +72,26 @@ controller.hears('reset thisisthepassword', ['slash_command'], function(bot, mes
     getGame({bot, message}, true, resetGame);
 });
 
-/*
-controller.hears('join', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
-    joinGame(bot, message);
+controller.hears('setup', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
+    getGame({bot, message}, false, function(botInfo, game){
+        for (var i = 2; i <= 2; i++){
+            var mockUser = 'Player' + i;
+    
+            joinGame(botInfo, game, mockUser);
+        }
+    });
 });
 
+controller.hears('join', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
+    getGame({bot, message}, false, joinGame);
+});
+/*
 controller.hears('quit', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
     quitGame(bot, message);
 });
 
 controller.hears('status', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
     reportTurnOrder(bot, message, true, false);
-});
-
-controller.hears('setup', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
-    for (var i = 2; i <= 2; i++){
-        var mockUser = 'Player' + i;
-
-        joinGame(bot, message, mockUser);
-    }
 });
 
 controller.hears('start', ['slash_command'], function(bot, message){
@@ -465,17 +466,6 @@ function getStandardCard(unoCard){
     
 }
 
-function colorToHex(color){    
-    switch(color){
-        case 'blue': return '#0033cc';
-        case 'red': return '#ff0000';
-        case 'green': return '#006633';
-        case 'yellow': return '#ffff00';
-        case 'wild': return '#000000';
-        default: return '';
-    }
-}
-
 function announceTurn(bot, message){
     var game = getGame(bot, message);
 
@@ -529,18 +519,28 @@ function quitGame(bot, message){
 
     reportTurnOrder(bot, message, false, true);
 }
+*/
 
-function joinGame(bot, message, userName){
-    var user = userName || message.user_name;
+function colorToHex(color){    
+    switch(color){
+        case 'blue': return '#0033cc';
+        case 'red': return '#ff0000';
+        case 'green': return '#006633';
+        case 'yellow': return '#ffff00';
+        case 'wild': return '#000000';
+        default: return '';
+    }
+}
 
-    var game = getGame(bot, message);
+function joinGame(botInfo, game, userName){
+    var user = userName || botInfo.message.user_name;
 
     if (!game){
         return;
     }
 
     if (game.players[user]){
-        bot.replyPrivate(message, user + ', you\'ve already joined the game!');
+        botInfo.bot.replyPrivate(botInfo.message, user + 'has already joined the game!');
         return;
     }
 
@@ -549,11 +549,12 @@ function joinGame(bot, message, userName){
     };
     game.turnOrder.push(user);
 
-    bot.replyPublic(message, user + ' has joined the game.');
+    botInfo.bot.replyPublic(botInfo.message, user + ' has joined the game.');
+    saveGame(botInfo, game);
 
-    reportTurnOrder(bot, message, false, true);
+    reportTurnOrder(botInfo, game, false, true);
 }
-*/
+
 function getGame(botInfo, suppressNotice, callback){
     var channel = botInfo.message.channel;
 
@@ -591,10 +592,8 @@ function saveGame(botInfo, game){
         console.log(game.id + ' saved.');
     });
 }
-/*
-function reportCurrentCard(bot, message, isPrivate, isDelayed){
-    var game = getGame(bot, message);
 
+function reportCurrentCard(botInfo, game, isPrivate, isDelayed){
     if (!game){
         return;
     }
@@ -609,31 +608,29 @@ function reportCurrentCard(bot, message, isPrivate, isDelayed){
 
     if (isPrivate){
         if (isDelayed){
-            bot.replyPrivateDelayed(message, msg);
+            botInfo.bot.replyPrivateDelayed(botInfo.message, msg);
             return;
         }
 
-        bot.replyPrivate(message, msg);
+        botInfo.bot.replyPrivate(botInfo.message, msg);
         return;
     }
 
     if (isDelayed){
-        bot.replyPublicDelayed(message, msg);
+        botInfo.bot.replyPublicDelayed(botInfo.message, msg);
         return;
     }
 
-    bot.replyPublic(message, msg);
+    botInfo.bot.replyPublic(botInfo.message, msg);
 }
 
-function reportTurnOrder(bot, message, isPrivate, isDelayed){
-    var game = getGame(bot, message, false, isDelayed);
-
+function reportTurnOrder(botInfo, game, isPrivate, isDelayed){
     if (!game){
         return;
     }
 
     if (game.started){
-        reportCurrentCard(bot, message, isPrivate, isDelayed);
+        reportCurrentCard(botInfo, game, isPrivate, isDelayed);
     }
 
     var currentOrder = '';
@@ -653,12 +650,12 @@ function reportTurnOrder(bot, message, isPrivate, isDelayed){
     }
 
     if (isPrivate){
-        bot.replyPrivateDelayed(message, 'Current playing order:\n' + currentOrder);
+        botInfo.bot.replyPrivateDelayed(botInfo.message, 'Current playing order:\n' + currentOrder);
     } else {
-        bot.replyPublicDelayed(message, 'Current playing order:\n' + currentOrder);
+        botInfo.bot.replyPublicDelayed(botInfo.message, 'Current playing order:\n' + currentOrder);
     }
 }
-*/
+
 function initializeGame(botInfo, game){
     var user = botInfo.message.user_name;
     console.log('-----initialize');
