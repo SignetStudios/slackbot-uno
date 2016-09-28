@@ -65,9 +65,7 @@ var games = {},
 //TODO: Allow for commands via @mentions as well
 
 controller.hears('new', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
-    getGame({bot, message}, true, function(game){
-        initializeGame({bot, message}, game);
-    });
+    getGame({bot, message}, true, initializeGame);
 });
 /*
 controller.hears('join', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
