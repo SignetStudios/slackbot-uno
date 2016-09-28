@@ -569,6 +569,7 @@ function getGame(botInfo, suppressNotice, callback){
                 botInfo.bot.replyPrivate(botInfo.message, 'There is no game yet.');
             }
             
+            console.log('No game or not initialized');
             callback(botInfo, undefined);
             return;
         }
@@ -657,6 +658,8 @@ function reportTurnOrder(bot, message, isPrivate, isDelayed){
 */
 function initializeGame(botInfo, game){
     var user = botInfo.message.user_name;
+    console.log('-----initialize');
+    console.log(game);
 
     if (game && game.initialized){
         botInfo.bot.replyPrivate(botInfo.message, 'There is already an uno game in progress. Type `/uno join` to join the game.');
