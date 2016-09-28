@@ -65,22 +65,24 @@ var games = {},
 //TODO: Allow for commands via @mentions as well
 
 controller.hears('new', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
-    initializeGame(bot, message);
+    getGame({bot, message}, true, function(game){
+        initializeGame({bot, message}, game);
+    });
 });
-
-controller.hears('join', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
+/*
+controller.hears('join', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
     joinGame(bot, message);
 });
 
-controller.hears('quit', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
+controller.hears('quit', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
     quitGame(bot, message);
 });
 
-controller.hears('status', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
+controller.hears('status', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
     reportTurnOrder(bot, message, true, false);
 });
 
-controller.hears('setup', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
+controller.hears('setup', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
     for (var i = 2; i <= 2; i++){
         var mockUser = 'Player' + i;
 
@@ -108,7 +110,8 @@ controller.hears(['draw'], ['slash_command'], function(bot, message){
 controller.hears(['pass'], ['slash_command'], function(bot, message){
     bot.replyPrivate(message, 'I\'m sorry, I\'m afraid I can\'t do that ' + message.user_name);
 });
-
+*/
+/*
 function playCard(bot, message){
     var game = getGame(bot, message),
         playerName = message.user_name,
@@ -547,26 +550,25 @@ function joinGame(bot, message, userName){
 
     reportTurnOrder(bot, message, false, true);
 }
+*/
+function getGame(botInfo, suppressNotice, callback){
+    var channel = botInfo.message.channel;
 
-function getGame(bot, message, suppressReport, isDelayed){
-    var channel = message.channel;
-
-    if (!games || !games[channel] || !games[channel].initialized){
-        if (!suppressReport)
-        {
-            if (isDelayed){
-                bot.replyPrivateDelayed(message, 'There is no game yet.');
-                return;
+    controller.storage.channels.get(channel, function(game){
+        if (!game || !game.initialized){
+            if (!suppressNotice){
+                botInfo.bot.replyPrivate(botInfo.message, 'There is no game yet.');
             }
-            bot.replyPrivate(message, 'There is no game yet.');
+            
+            callback(botInfo, undefined);
+            return;
         }
-        return undefined;
-    }
-    
-    return games[channel];
+        
+        callback(botInfo, game);
+    });
 }
 
-function saveGame(bot, message, game){
+function saveGame(botInfo, game){
     console.log('Saving game ' + game.id);
     controller.storage.channels.save(game, function(err){
         if (err){
@@ -576,7 +578,7 @@ function saveGame(bot, message, game){
         console.log(game.id + ' saved.');
     });
 }
-
+/*
 function reportCurrentCard(bot, message, isPrivate, isDelayed){
     var game = getGame(bot, message);
 
@@ -643,20 +645,17 @@ function reportTurnOrder(bot, message, isPrivate, isDelayed){
         bot.replyPublicDelayed(message, 'Current playing order:\n' + currentOrder);
     }
 }
-
-function initializeGame(bot, message){
-    var user = message.user_name,
-        channel = message.channel;
-
-    var game = getGame(bot, message, true);
+*/
+function initializeGame(botInfo, game){
+    var user = botInfo.message.user_name;
 
     if (game && game.initialized){
-        bot.replyPrivate(message, 'There is already an uno game in progress. Type `/uno join` to join the game.');
+        botInfo.bot.replyPrivate(botInfo.message, 'There is already an uno game in progress. Type `/uno join` to join the game.');
         return;
     }
         
     game = newGame();
-    game.id = message.channel;
+    game.id = botInfo.message.channel;
 
     game.initialized = true;
     game.player1 = user;
@@ -665,11 +664,11 @@ function initializeGame(bot, message){
     };
     game.turnOrder.push(user);
 
-    bot.replyPublic(message, user + ' has started UNO. Type `/uno join` to join the game.');
+    botInfo.bot.replyPublic(botInfo.message, user + ' has started UNO. Type `/uno join` to join the game.');
 
-    saveGame(bot, message, game);
+    saveGame(botInfo, game);
 
-    reportTurnOrder(bot, message, false, true);
+    //reportTurnOrder(bot, message, false, true);
 }
 
 function newGame(){
@@ -683,6 +682,7 @@ function newGame(){
     };
 }
 
+/*
 controller.hears(['uptime', 'identify yourself', 'who are you', 'what is your name'],
     'direct_message,direct_mention,mention', function(bot, message) {
 
@@ -712,3 +712,4 @@ function formatUptime(uptime) {
     uptime = uptime + ' ' + unit;
     return uptime;
 }
+*/
