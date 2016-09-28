@@ -537,7 +537,9 @@ function joinGame(bot, message, userName){
 }
 
 function getGame(bot, message, suppressReport){
-    var game = controller.storage.channels.get(message.channel);
+    var game = controller.storage.channels.get(message.channel, function(){
+        console.log(arguments);
+    });
     console.log(game);
         
         
