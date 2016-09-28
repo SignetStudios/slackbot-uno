@@ -43,8 +43,6 @@ controller.setupWebserver(PORT, function (err, webserver) {
   controller.createWebhookEndpoints(webserver);
 });
 
-Promise.promisifyAll(redis.RedisClient.prototype);
-Promise.promisifyAll(redis.Multi.prototype);
 
 //------------Main code begins here-----------------
 
@@ -539,28 +537,22 @@ function joinGame(bot, message, userName){
 }
 
 function getGame(bot, message, suppressReport){
-    return controller.storage.channels.get(message.channel, function(err, data){
-        if (err){
-            console.log(err);
-        }
+    var game = controller.storage.channels.get(message.channel);
         
-        return data;
-    }).then(function(game){
-        if (!game || !game.initialized){
-            if (!suppressReport)
-            {
-                bot.replyPrivate(message, 'There is no game yet.');
-            }
-            return undefined;
+    if (!game || !game.initialized){
+        if (!suppressReport)
+        {
+            bot.replyPrivate(message, 'There is no game yet.');
         }
-    
-        return game;
-    });
+        return undefined;
+    }
+
+    return game;
 }
 
 function saveGame(bot, message, game){
     console.log('Saving game ' + game.id);
-    return controller.storage.channels.save(game, function(err){
+    controller.storage.channels.save(game, function(err){
         if (err){
             console.log('Error saving: ' + err);
         }
@@ -635,30 +627,30 @@ function reportTurnOrder(bot, message, isPrivate, isDelayed){
 }
 
 function initializeGame(bot, message){
-    getGame(bot, message, true).then(function(game){
-        var user = message.user_name;
+    var game = getGame(bot, message, true);
     
-        if (game && game.initialized){
-            bot.replyPrivate(message, 'There is already an uno game in progress. Type `/uno join` to join the game.');
-            return;
-        }
-            
-        game = newGame();
-        game.id = message.channel;
-    
-        game.initialized = true;
-        game.player1 = user;
-        game.players[user] = {
-            hand: []
-        };
-        game.turnOrder.push(user);
-    
-        bot.replyPublic(message, user + ' has started UNO. Type `/uno join` to join the game.');
-    
-        saveGame(bot, message, game).then(function(){
-            reportTurnOrder(bot, message, false, true);
-        });
-    });
+    var user = message.user_name;
+
+    if (game && game.initialized){
+        bot.replyPrivate(message, 'There is already an uno game in progress. Type `/uno join` to join the game.');
+        return;
+    }
+        
+    game = newGame();
+    game.id = message.channel;
+
+    game.initialized = true;
+    game.player1 = user;
+    game.players[user] = {
+        hand: []
+    };
+    game.turnOrder.push(user);
+
+    bot.replyPublic(message, user + ' has started UNO. Type `/uno join` to join the game.');
+
+    saveGame(bot, message, game);
+
+    reportTurnOrder(bot, message, false, true);
 }
 
 function newGame(){
