@@ -43,6 +43,9 @@ controller.setupWebserver(PORT, function (err, webserver) {
   controller.createWebhookEndpoints(webserver);
 });
 
+Promise.promisifyAll(redis.RedisClient.prototype);
+Promise.promisifyAll(redis.Multi.prototype);
+
 //------------Main code begins here-----------------
 
 var //games = {},
@@ -52,9 +55,7 @@ var //games = {},
 //TODO: Allow for commands via @mentions as well
 
 controller.hears('new', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
-    controller.storage.channels.get(message.channel, function(err, data){
-        initializeGame(data, bot, message);
-    });
+    initializeGame(bot, message);
 });
 
 controller.hears('join', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
@@ -538,19 +539,32 @@ function joinGame(bot, message, userName){
 }
 
 function getGame(bot, message, suppressReport){
-    var game = controller.storage.channels.get(message.channel, function(err){
-        console.log(err);
-    });
-
-    if (!game || !game.initialized){
-        if (!suppressReport)
-        {
-            bot.replyPrivate(message, 'There is no game yet.');
+    return controller.storage.channels.get(message.channel, function(err, data){
+        if (err){
+            console.log(err);
         }
-        return undefined;
-    }
+        
+        return data;
+    }).then(function(game){
+        if (!game || !game.initialized){
+            if (!suppressReport)
+            {
+                bot.replyPrivate(message, 'There is no game yet.');
+            }
+            return undefined;
+        }
+    
+        return game;
+    });
+}
 
-    return game;
+function saveGame(bot, message, game){
+    console.log('Saving game ' + game.id);
+    return controller.storage.channels.save(game, function(err){
+        if (err){
+            console.log('Error saving: ' + err);
+        }
+    });
 }
 
 function reportCurrentCard(bot, message, isPrivate, isDelayed){
@@ -620,30 +634,30 @@ function reportTurnOrder(bot, message, isPrivate, isDelayed){
     }
 }
 
-function initializeGame(game, bot, message){
-    var user = message.user_name;
-
-    if (game && game.initialized){
-        bot.replyPrivate(message, 'There is already an uno game in progress. Type `/uno join` to join the game.');
-        return;
-    }
-        
-    game = newGame();
-    game.id = message.channel;
-
-    game.initialized = true;
-    game.player1 = user;
-    game.players[user] = {
-        hand: []
-    };
-    game.turnOrder.push(user);
-
-    bot.replyPublic(message, user + ' has started UNO. Type `/uno join` to join the game.');
-
-    reportTurnOrder(bot, message, false, true);
-
-    controller.storage.channels.save(game, function(err){
-        console.log(err);
+function initializeGame(bot, message){
+    getGame(bot, message, true).then(function(game){
+        var user = message.user_name;
+    
+        if (game && game.initialized){
+            bot.replyPrivate(message, 'There is already an uno game in progress. Type `/uno join` to join the game.');
+            return;
+        }
+            
+        game = newGame();
+        game.id = message.channel;
+    
+        game.initialized = true;
+        game.player1 = user;
+        game.players[user] = {
+            hand: []
+        };
+        game.turnOrder.push(user);
+    
+        bot.replyPublic(message, user + ' has started UNO. Type `/uno join` to join the game.');
+    
+        saveGame(bot, message, game).then(function(){
+            reportTurnOrder(bot, message, false, true);
+        });
     });
 }
 
