@@ -33,6 +33,8 @@ if (TOKEN) {
   require('beepboop-botkit').start(controller, { debug: true });
 }
 
+Promise.promisifyAll(controller.storage.channels);
+
 controller.setupWebserver(PORT, function (err, webserver) {
   if (err) {
     console.error(err);
@@ -537,26 +539,33 @@ function joinGame(bot, message, userName){
 }
 
 function getGame(bot, message, suppressReport){
-    var game = controller.storage.channels.get(message.channel, function(){
-        console.log(arguments);
-    });
-    console.log(game);
-        
-        
-    if (!game || !game.initialized){
-        if (!suppressReport)
-        {
-            bot.replyPrivate(message, 'There is no game yet.');
+    return controller.storage.channels.getAsync(message.channel, function(err, data){
+        if (err){
+            console.log(err);
+            return undefined;
         }
-        return undefined;
-    }
+        
+        if (!game || !game.initialized){
+            if (!suppressReport)
+            {
+                bot.replyPrivate(message, 'There is no game yet.');
+            }
+            return undefined;
+        }
+        
+        return data;
+    });
+}
 
-    return game;
+
+        
+        
+
 }
 
 function saveGame(bot, message, game){
     console.log('Saving game ' + game.id);
-    controller.storage.channels.save(game, function(err){
+    return controller.storage.channels.saveAsync(game, function(err){
         if (err){
             console.log('Error saving: ' + err);
         }
@@ -564,97 +573,98 @@ function saveGame(bot, message, game){
 }
 
 function reportCurrentCard(bot, message, isPrivate, isDelayed){
-    var game = getGame(bot, message);
-
-    if (!game){
-        return;
-    }
-
-    var msg = {
-        "text": 'The current up card is:',
-        "attachments": [{            
-            "color": colorToHex(game.currentCard.color),
-            "text": game.currentCard.color + ' ' + game.currentCard.value        
-        }]
-    };
-
-    if (isPrivate){
-        if (isDelayed){
-            bot.replyPrivateDelayed(message, msg);
+    getGame(bot, message).then(function(game){
+        if (!game){
             return;
         }
-
-        bot.replyPrivate(message, msg);
-        return;
-    }
-
-    if (isDelayed){
-        bot.replyPublicDelayed(message, msg);
-        return;
-    }
-
-    bot.replyPublic(message, msg);
+    
+        var msg = {
+            "text": 'The current up card is:',
+            "attachments": [{            
+                "color": colorToHex(game.currentCard.color),
+                "text": game.currentCard.color + ' ' + game.currentCard.value        
+            }]
+        };
+    
+        if (isPrivate){
+            if (isDelayed){
+                bot.replyPrivateDelayed(message, msg);
+                return;
+            }
+    
+            bot.replyPrivate(message, msg);
+            return;
+        }
+    
+        if (isDelayed){
+            bot.replyPublicDelayed(message, msg);
+            return;
+        }
+    
+        bot.replyPublic(message, msg);
+    });
 }
 
 function reportTurnOrder(bot, message, isPrivate, isDelayed){
-    var game = getGame(bot, message, isPrivate, isDelayed);
-
-    if (!game){
-        return;
-    }
-
-    if (game.started){
-        reportCurrentCard(bot, message, isPrivate, isDelayed);
-    }
-
-    var currentOrder = '';
-
-    for (var i = 1; i < game.turnOrder.length + 1; i++){
-        if (i > 1){
-            currentOrder = currentOrder + ', ';
+    getGame(bot, message, isPrivate, isDelayed).then(function(game){
+        if (!game){
+            return;
         }
-        var playerName = game.turnOrder[i - 1],
-            cardReport = '';
-
+    
         if (game.started){
-            cardReport = ' (' + game.players[playerName].hand.length + ' cards)';
+            reportCurrentCard(bot, message, isPrivate, isDelayed);
         }
+    
+        var currentOrder = '';
+    
+        for (var i = 1; i < game.turnOrder.length + 1; i++){
+            if (i > 1){
+                currentOrder = currentOrder + ', ';
+            }
+            var playerName = game.turnOrder[i - 1],
+                cardReport = '';
+    
+            if (game.started){
+                cardReport = ' (' + game.players[playerName].hand.length + ' cards)';
+            }
+    
+            currentOrder = currentOrder + '\n' + i + '. ' + playerName + cardReport; 
+        }
+    
+        if (isPrivate){
+            bot.replyPrivateDelayed(message, 'Current playing order:\n' + currentOrder);
+        } else {
+            bot.replyPublicDelayed(message, 'Current playing order:\n' + currentOrder);
+        }
+    });
 
-        currentOrder = currentOrder + '\n' + i + '. ' + playerName + cardReport; 
-    }
-
-    if (isPrivate){
-        bot.replyPrivateDelayed(message, 'Current playing order:\n' + currentOrder);
-    } else {
-        bot.replyPublicDelayed(message, 'Current playing order:\n' + currentOrder);
-    }
 }
 
 function initializeGame(bot, message){
-    var game = getGame(bot, message, true);
+    var game = getGame(bot, message, true).then(function(game){
+        var user = message.user_name;
     
-    var user = message.user_name;
-
-    if (game && game.initialized){
-        bot.replyPrivate(message, 'There is already an uno game in progress. Type `/uno join` to join the game.');
-        return;
-    }
-        
-    game = newGame();
-    game.id = message.channel;
-
-    game.initialized = true;
-    game.player1 = user;
-    game.players[user] = {
-        hand: []
-    };
-    game.turnOrder.push(user);
-
-    bot.replyPublic(message, user + ' has started UNO. Type `/uno join` to join the game.');
-
-    saveGame(bot, message, game);
-
-    reportTurnOrder(bot, message, false, true);
+        if (game && game.initialized){
+            bot.replyPrivate(message, 'There is already an uno game in progress. Type `/uno join` to join the game.');
+            return;
+        }
+            
+        game = newGame();
+        game.id = message.channel;
+    
+        game.initialized = true;
+        game.player1 = user;
+        game.players[user] = {
+            hand: []
+        };
+        game.turnOrder.push(user);
+    
+        bot.replyPublic(message, user + ' has started UNO. Type `/uno join` to join the game.');
+    
+        saveGame(bot, message, game).then(function(){
+            reportTurnOrder(bot, message, false, true);
+        });
+    });
 }
 
 function newGame(){
