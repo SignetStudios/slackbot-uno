@@ -370,7 +370,7 @@ function drawCard(bot, message){
 
     drawCards(bot, message, playerName, 1)
         .then(function(){
-            bot.replyPrivate(message, 'You now have' + game.players[playerName].hand.length + ' cards.')
+            bot.replyPrivate(message, 'You now have ' + game.players[playerName].hand.length + ' cards.')
             reportHand(bot, message, true);
         });
 }
@@ -395,6 +395,9 @@ function drawCards(bot, message, playerName, count){
             var card = getUnoCard(result.cards[j])
             player.hand.push(card);
         }
+
+        console.log(playerName + ' hand at ' + player.hand.length + ' cards.');
+        console.log(result.remaining + ' cards remaining in the deck.');
 
         if (result.remaining <= 10){
             bot.replyPublicDelayed(message, 'Less than 10 cards remaining. Reshuffling the deck.');
