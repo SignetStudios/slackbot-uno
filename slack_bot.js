@@ -45,14 +45,16 @@ controller.setupWebserver(PORT, function (err, webserver) {
 
 //------------Main code begins here-----------------
 
-var games = {},
+var //games = {},
     suitMappings = {'HEARTS': 'red', 'SPADES': 'green', 'CLUBS': 'yellow', 'DIAMONDS': 'blue'},
     valueMappings = {'JACK': 'draw 2', 'QUEEN': 'skip', 'KING': 'reverse'};
 
 //TODO: Allow for commands via @mentions as well
 
 controller.hears('new', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
-    initializeGame(bot, message);
+    controller.storage.channels.get(message.channel, function(err, data){
+        initializeGame(data, bot, message);
+    });
 });
 
 controller.hears('join', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
@@ -616,25 +618,16 @@ function reportTurnOrder(bot, message, isPrivate, isDelayed){
     }
 }
 
-function initializeGame(bot, message){
-    var user = message.user_name,
-        channel = message.channel;
+function initializeGame(game, bot, message){
+    var user = message.user_name;
 
-    var game = getGame(bot, message, true);
-
-    if (!game){
-        game = newGame();
-
-        games[channel] = game;
-    }
-
-    if (game.initialized){
+    if (game && game.initialized){
         bot.replyPrivate(message, 'There is already an uno game in progress. Type `/uno join` to join the game.');
         return;
     }
         
     game = newGame();
-    games[channel] = game;
+    game.id = message.channel;
 
     game.initialized = true;
     game.player1 = user;
@@ -646,6 +639,10 @@ function initializeGame(bot, message){
     bot.replyPublic(message, user + ' has started UNO. Type `/uno join` to join the game.');
 
     reportTurnOrder(bot, message, false, true);
+
+    controller.storage.channels.save(game, function(err){
+        console.log(err);
+    });
 }
 
 function newGame(){
