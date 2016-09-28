@@ -5,7 +5,7 @@ var Botkit = require('botkit'),
     }),
     TOKEN = process.env.SLACK_TOKEN,
     bot = Botkit.slackbot({
-        token: token
+        token: TOKEN
     }),
     request = require('request-promise'),
     Promise = require('bluebird'),
