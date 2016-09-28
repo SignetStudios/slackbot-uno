@@ -550,9 +550,11 @@ function joinGame(botInfo, game, userName){
     game.turnOrder.push(user);
 
     botInfo.bot.replyPublic(botInfo.message, user + ' has joined the game.');
-    saveGame(botInfo, game);
+    
+    saveGame(botInfo, game, function(){
+        reportTurnOrder(botInfo, game, false, true);
+    });
 
-    reportTurnOrder(botInfo, game, false, true);
 }
 
 function getGame(botInfo, suppressNotice, callback){
@@ -582,14 +584,19 @@ function getGame(botInfo, suppressNotice, callback){
     });
 }
 
-function saveGame(botInfo, game){
+function saveGame(botInfo, game, callback){
     console.log('Saving game ' + game.id);
+    console.log(game);
     controller.storage.channels.save(game, function(err){
         if (err){
             console.log('Error saving: ' + err);
             return;
         }
         console.log(game.id + ' saved.');
+        
+        if (callback){
+            callback();
+        }
     });
 }
 
