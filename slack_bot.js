@@ -2,7 +2,8 @@ var Botkit = require('botkit'),
     os = require('os'),
     redis = require('botkit-storage-redis')({
         host: process.env.REDIS_HOST,
-        port: process.env.REDIS_PORT
+        port: process.env.REDIS_PORT,
+        password: process.env.REDIS_PASSWORD
     }),
     controller = Botkit.slackbot({
         debug: true,
@@ -13,8 +14,6 @@ var Botkit = require('botkit'),
     Promise = require('bluebird'),
     PORT = process.env.PORT || 8080,
     VERIFY_TOKEN = process.env.SLACK_VERIFY_TOKEN;
-
-redis.auth(process.env.REDIS_PASSWORD);
 
 if (TOKEN) {
   console.log('Starting in single-team mode');
