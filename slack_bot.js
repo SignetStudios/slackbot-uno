@@ -37,7 +37,7 @@ controller.setupWebserver(PORT, function (err, webserver) {
   }
 
   // Setup our slash command webhook endpoints
-  controller.createWebhookEndpoints(webserver, SLACK_VERIFY_TOKEN)
+  controller.createWebhookEndpoints(webserver)
 });
 
 //------------Main code begins here-----------------
