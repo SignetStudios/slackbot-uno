@@ -602,6 +602,7 @@ function saveGame(botInfo, game, callback){
             }
             
             console.log('Data currently in storage:');
+            console.log(data);
             for (var i = data.length; i < data.length; i++){
                 console.log(data[i]);
             }
