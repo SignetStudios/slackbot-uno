@@ -539,7 +539,7 @@ function joinGame(bot, message, userName){
 }
 
 function getGame(bot, message, suppressReport){
-    return controller.storage.channels.getAsync(message.channel, function(err, data){
+    return controller.storage.channels.getAsync(message.channel, function(err, game){
         if (err){
             console.log(err);
             return undefined;
@@ -553,14 +553,8 @@ function getGame(bot, message, suppressReport){
             return undefined;
         }
         
-        return data;
+        return game;
     });
-}
-
-
-        
-        
-
 }
 
 function saveGame(bot, message, game){
@@ -641,7 +635,7 @@ function reportTurnOrder(bot, message, isPrivate, isDelayed){
 }
 
 function initializeGame(bot, message){
-    var game = getGame(bot, message, true).then(function(game){
+    getGame(bot, message, true).then(function(game){
         var user = message.user_name;
     
         if (game && game.initialized){
