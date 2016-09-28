@@ -548,12 +548,16 @@ function joinGame(bot, message, userName){
     reportTurnOrder(bot, message, false, true);
 }
 
-function getGame(bot, message, suppressReport){
+function getGame(bot, message, suppressReport, isDelayed){
     var channel = message.channel;
 
     if (!games || !games[channel] || !games[channel].initialized){
         if (!suppressReport)
         {
+            if (isDelayed){
+                bot.replyPrivateDelayed(message, 'There is no game yet.');
+                return;
+            }
             bot.replyPrivate(message, 'There is no game yet.');
         }
         return undefined;
@@ -607,7 +611,7 @@ function reportCurrentCard(bot, message, isPrivate, isDelayed){
 }
 
 function reportTurnOrder(bot, message, isPrivate, isDelayed){
-    var game = getGame(bot, message, isPrivate, isDelayed);
+    var game = getGame(bot, message, false, isDelayed);
 
     if (!game){
         return;
