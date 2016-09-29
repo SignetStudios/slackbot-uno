@@ -531,7 +531,7 @@ function joinGame(botInfo, game, userName){
     }
 
     if (game.players[user]){
-        botInfo.bot.replyPrivate(botInfo.message, user + 'has already joined the game!');
+        botInfo.bot.replyPrivate(botInfo.message, user + ' has already joined the game!');
         return;
     }
 
@@ -579,9 +579,6 @@ function saveGame(botInfo, game, callback){
     console.log('Saving game ' + game.id);
     console.log(game);
     
-    //var save = JSON.parse(JSON.stringify(game));
-    //save.players = Object.keys(game.players);
-    
     controller.storage.channels.save(game, function(err){
         if (err){
             console.log('Error saving: ' + err);
@@ -589,27 +586,10 @@ function saveGame(botInfo, game, callback){
         }
         console.log(arguments);
         console.log(game.id + ' saved.');
-        /*
-        var userSaves = [];
-        
-        for (var i = 0; i < save.players.length; i++){
-            var user = save.players[i];
-            console.log('Saving user ' + user);
-            var userSave = controller.storage.users.saveAsync({
-                id: user,
-                hand: game.players[user].hand
-            }).then(function(){
-                console.log('User ' + user + ' saved.');
-            });
-            
-            userSaves.push(userSave);
+    
+        if (callback){
+            callback();
         }
-        */
-        //Promise.all(userSaves).then(function(){
-            if (callback){
-                callback();
-            }
-        //});
     });
 }
 
@@ -678,9 +658,7 @@ function reportTurnOrder(botInfo, game, isPrivate, isDelayed){
 
 function initializeGame(botInfo, game){
     var user = botInfo.message.user_name;
-    console.log('-----initialize');
-    console.log(game);
-
+    
     if (game && game.initialized){
         botInfo.bot.replyPrivate(botInfo.message, 'There is already an uno game in progress. Type `/uno join` to join the game.');
         return;
