@@ -6,9 +6,9 @@ var Botkit = require('botkit'),
         password: process.env.REDIS_PASSWORD,
         
     }),*/
-    firebase = require('botkit-storage-firebase'){
+    firebase = require('botkit-storage-firebase')({
       firebase_uri: 'https://slackbot-uno.firebaseio.com/'
-    },
+    }),
     controller = Botkit.slackbot({
         //debug: true,
         storage: firebase
