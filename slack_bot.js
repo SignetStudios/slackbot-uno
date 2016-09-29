@@ -107,6 +107,36 @@ controller.hears(['^pass'], ['slash_command'], function(bot, message){
     bot.replyPrivate(message, 'I\'m sorry, I\'m afraid I can\'t do that ' + message.user_name);
 });
 
+controller.hears(['^test$'], ['slash_command'], function(bot, message){
+    bot.replyInteractive(message, {
+        text: 'Message',
+        attachments: [
+            {
+                title: 'attachment title',
+                actions: [
+                    {
+                        name: 'action1name',
+                        text: 'action1text',
+                        value: 'action1value',
+                        type: 'button'
+                    },
+                    {
+                        name: 'action2name',
+                        text: 'action2text',
+                        value: 'action2value',
+                        type: 'button'
+                    }]
+            }]
+    });
+});
+
+controller.on('interactive_message_callback', function(bot, message){
+    bot.replyPrivate(message, 'actions: ' + message.actions);
+    bot.replyPrivateDelayed(message, 'callback_id: ' + message.callback_id);
+    console.log('Interactive response: ');
+    console.log(message);
+})
+
 
 //------- Game code begins here ------------//
 
