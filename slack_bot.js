@@ -223,7 +223,7 @@ function drawCards(botInfo, game, playerName, count){
         return;
     }
 
-    console.log('Drawing ' + count + ' cards for ' + playerName);
+    console.log('226---- Drawing ' + count + ' cards for ' + playerName);
 
     return request({
         uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=' + count,
@@ -232,15 +232,15 @@ function drawCards(botInfo, game, playerName, count){
         var player = game.players[playerName];
         var cardCount = result.cards.length;
 
-        console.log('Drew ' + cardCount + ' cards, adding to ' + playerName + ' hand');
+        console.log('235---- Drew ' + cardCount + ' cards, adding to ' + playerName + ' hand');
 
         for (var j = 0; j < cardCount; j++){
             var card = getUnoCard(result.cards[j]);
             player.hand.push(card);
         }
 
-        console.log(playerName + ' hand at ' + player.hand.length + ' cards.');
-        console.log(result.remaining + ' cards remaining in the deck.');
+        console.log('242----' + playerName + ' hand at ' + player.hand.length + ' cards.');
+        console.log('243----' + result.remaining + ' cards remaining in the deck.');
 
         if (result.remaining <= 10){
             sendMessage(botInfo, 'Less than 10 cards remaining. Reshuffling the deck.', true);
@@ -475,10 +475,17 @@ function playCard(botInfo, game){
     } else if (cardToPlay.value === 'reverse'){
         game.turnOrder.reverse();
     } else if (cardToPlay === 'draw 2'){
+        console.log('478---- playing a draw 2');
+        console.log('479---- ending ' + game.turnOrder[0] + 's turn');
         endTurn(botInfo, game);
+        console.log('481---- it is now ' + game.turnOrder[0] + 's turn');
+        console.log('482---- pushing 2 cards to ' + game.turnOrder[0]);
         asyncs.push(drawCards(botInfo, game, game.turnOrder[0], 2)
             .then(function(){
+                console.log('485---- drew 2 cards for ' + game.turnOrder[0]);
+                console.log('486---- ending ' + game.turnOrder[0] + 's turn');
                 endTurn(botInfo, game);
+                console.log('488---- it is now ' + game.turnOrder[0] + 's turn');
             }));
     } else{
         endTurn(botInfo, game);
