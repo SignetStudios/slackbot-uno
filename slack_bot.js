@@ -396,8 +396,10 @@ function drawCard(botInfo, game){
 
     drawCards(botInfo, game, playerName, 1)
         .then(function(){
-            sendMessage(botInfo, 'You now have ' + game.players[playerName].hand.length + ' cards.', false, true);
-            reportHand(botInfo, game, true);
+            saveGame(botInfo, game).then(function(){
+                sendMessage(botInfo, 'You now have ' + game.players[playerName].hand.length + ' cards.', false, true);
+                reportHand(botInfo, game, true);
+            });
         });
 }
 
