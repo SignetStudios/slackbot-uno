@@ -1,6 +1,16 @@
 var Botkit = require('botkit'),
     os = require('os'),
-    storage = require('./storage.js')(),
+    storage = require('./storage.js')({
+        debug: true,
+        logger: {
+            debug: function(val){
+                console.log('DEBUG: ' + val);
+            },
+            error: function(val){
+                console.log('ERROR: ' + val);
+            }
+        }
+    }),
     controller = Botkit.slackbot({
         storage: storage
     }),
