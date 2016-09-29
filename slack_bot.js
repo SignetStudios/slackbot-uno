@@ -306,7 +306,7 @@ function reportHand(botInfo, game, isDelayed){
 
     var hand = [];
 
-    for (var i = 0; i < player.hand.length; i++){
+    for (var i = player.hand.length - 1; i >= 0; i--){
         var card = player.hand[i];
         hand.push({
             "color": colorToHex(card.color),
