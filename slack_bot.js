@@ -81,11 +81,14 @@ controller.hears('quit', ['slash_command', 'direct_mention', 'mention'], functio
     getGame({bot, message}, false, quitGame);
 });
 
+controller.hears('status', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
+    getGame({bot, message}, false, function(botInfo, game){
+        reportTurnOrder(botInfo, game, true, false);
+    });
+});
+
 /*
 
-controller.hears('status', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
-    reportTurnOrder(bot, message, true, false);
-});
 
 controller.hears('start', ['slash_command'], function(bot, message){
     beginGame(bot, message);
@@ -478,8 +481,7 @@ function announceTurn(bot, message){
 */
 
 function quitGame(botInfo, game){
-    var user = botInfo.message.user_name,
-        channel = botInfo.message.channel;
+    var user = botInfo.message.user_name;
         
     if (!game){
         return;
@@ -659,11 +661,7 @@ function reportTurnOrder(botInfo, game, isPrivate, isDelayed){
         currentOrder = currentOrder + '\n' + i + '. ' + playerName + cardReport; 
     }
 
-    if (isPrivate){
-        botInfo.bot.replyPrivateDelayed(botInfo.message, 'Current playing order:\n' + currentOrder);
-    } else {
-        botInfo.bot.replyPublicDelayed(botInfo.message, 'Current playing order:\n' + currentOrder);
-    }
+    sendMessage(botInfo, 'Current playing order:\n' + currentOrder, true, isPrivate);
 }
 
 function initializeGame(botInfo, game){
