@@ -88,62 +88,56 @@ controller.hears('status', ['slash_command', 'direct_mention', 'mention'], funct
 });
 
 controller.hears('start', ['slash_command'], function(bot, message){
-    getGame({bot, message}, false)
-    beginGame(bot, message);
+    getGame({bot, message}, false, beginGame);
 });
-
-/*
-
-
 
 //The following should hear most combinations of cards that can be played
 controller.hears('^play(?: (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?|w(?:ild)?|d(?:raw ?4)?)(?: ?([1-9]|s(?:kip)?|r(?:everse)?|d(?:raw ?2)?))?)?$', ['slash_command'], function(bot, message){
-    playCard(bot, message);
+    getGame({bot, message}, false, playCard);
 });
 
 controller.hears('^color (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?)', ['slash_command'], function(bot, message){
-    setWildColor(bot, message);
+    getGame({bot, message}, false, setWildColor);
 });
 
 controller.hears(['draw'], ['slash_command'], function(bot, message){
-    drawCard(bot, message);
+    getGame({bot, message}, false, drawCard);
 });
 
 controller.hears(['pass'], ['slash_command'], function(bot, message){
     bot.replyPrivate(message, 'I\'m sorry, I\'m afraid I can\'t do that ' + message.user_name);
 });
-*/
-/*
-function playCard(bot, message){
-    var game = getGame(bot, message),
-        playerName = message.user_name,
-        toPlayColor = message.match[1],
-        toPlayValue = message.match[2];
+
+
+function playCard(botInfo, game){
+    var playerName = botInfo.message.user_name,
+        toPlayColor = botInfo.message.match[1],
+        toPlayValue = botInfo.message.match[2];
 
     if (!game){
         return;
     }
 
     if (!game.started){
-        bot.replyPrivate(message, 'The game has not yet been started.');
+        sendMessage(botInfo, 'The game has not yet been started.', false, true);
         return;
     }
 
     var currentPlayer = game.turnOrder[0];
 
     if (playerName !== currentPlayer){
-        bot.replyPrivate(message, 'It is not your turn.');
+        sendMessage(botInfo, 'It is not your turn.', false, true);
         return;
     }
 
     if (!toPlayColor && !toPlayValue){
-        reportHand(bot, message);
-        bot.replyPrivateDelayed(message, 'You can perform the following actions:\n`/uno play [card]`, `/uno draw`, `/uno view`');
+        reportHand(botInfo, game);
+        sendMessage(botInfo, 'You can perform the following actions:\n`/uno play [card]`, `/uno draw`, `/uno view`', true, true);
         return;
     }
 
     if (!/w(ild)?|d(raw ?4)?/i.test(toPlayColor) && !toPlayValue){
-        bot.replyPrivate(message, 'You must specify the value of the card to be played.');
+        sendMessage(botInfo, 'You must specify the value of the card to be played.', false, true);
         return;
     }
 
@@ -167,7 +161,7 @@ function playCard(bot, message){
 
     if (selectedCards.length === 0){
         console.log(toPlayColor + ' ' + toPlayValue);
-        bot.replyPrivate(message, 'You don\'t have a ' + (toPlayColor !== 'wild' ? toPlayColor + ' ' : '') + toPlayValue);
+        sendMessage(botInfo, 'You don\'t have a ' + (toPlayColor !== 'wild' ? toPlayColor + ' ' : '') + toPlayValue, false, true);
         return;
     }
 
@@ -180,7 +174,7 @@ function playCard(bot, message){
         (game.currentCard.value === 'wild' ||
         game.currentCard.value === 'draw 4' ||         
         cardToPlay.value !== game.currentCard.value)){
-            bot.replyPrivate(message, 'You cannot play a ' + toPlayColor + ' ' + toPlayValue + ' on a ' + game.currentCard.color + ' ' + game.currentCard.value);
+            sendMessage(botInfo, 'You cannot play a ' + toPlayColor + ' ' + toPlayValue + ' on a ' + game.currentCard.color + ' ' + game.currentCard.value, false, true);
             return;
     }
 
@@ -192,54 +186,60 @@ function playCard(bot, message){
     game.currentCard = cardToPlay;
 
     if (cardToPlay.color === 'wild'){
-        bot.replyPrivate(message, 'Type `/uno color [color]` to specify what the new color should be.');
+        sendMessage(botInfo, 'Type `/uno color [color]` to specify what the new color should be.', false, true);
         return;
     }
 
-    bot.replyPrivate(message, 'playing ' + cardToPlay.color + ' ' + cardToPlay.value);
+    sendMessage(botInfo, 'playing ' + cardToPlay.color + ' ' + cardToPlay.value, false, true);
+
+    var asyncs = [];
 
     if (cardToPlay.value === 'skip'){
-        endTurn(bot, message);
-        endTurn(bot, message);
+        endTurn(botInfo, game);
+        endTurn(botInfo, game);
     } else if (cardToPlay.value === 'reverse'){
         game.turnOrder.reverse();
     } else if (cardToPlay === 'draw 2'){
-        endTurn(bot, message);
-        drawCards(bot, message, game.turnOrder[0], 2)
+        endTurn(botInfo, game);
+        asyncs.push(drawCards(botInfo, game, game.turnOrder[0], 2)
             .then(function(){
-                endTurn(bot, message);
-            });
+                endTurn(botInfo, game);
+            }));
     } else{
-        endTurn(bot, message);
+        endTurn(botInfo, game);
     }
     
-    reportHand(bot, message, true);
-    bot.replyPublicDelayed(message, playerName + ' played a ' + toPlayColor + ' ' + toPlayValue);
-    announceTurn(bot, message);
+    Promise.all(asyncs).then(function(){
+        saveGame(botInfo, game).then(function(){
+            reportHand(botInfo, game, true);
+            sendMessage(botInfo, playerName + ' played a ' + toPlayColor + ' ' + toPlayValue, true);
+            announceTurn(botInfo, game);
+        });
+    });
 }
 
-function setWildColor(bot, message){
-        var game = getGame(bot, message),
-        playerName = message.user_name,
-        newColor = message.match[1];
-
+function setWildColor(botInfo, game){
     if (!game){
         return;
     }
 
+    var playerName = botInfo.message.user_name,
+    newColor = botInfo.message.match[1];
+
     if (!game.started){
-        bot.replyPrivate(message, 'The game has not yet been started.');
+        sendMessage(botInfo, 'The game has not yet been started.', false, true);
         return;
     }
 
     if (game.currentCard.color !== 'wild'){
-        bot.replyPrivate(message, 'You have\'t played a wild.');
+        sendMessage(botInfo, 'You have\'t played a wild.', false, true);
     }
 
     var currentPlayer = game.turnOrder[0];
 
-    if (playerName !== currentPlayer){
-        bot.replyPrivate(message, 'It is not your turn.');
+    if (playerName !== currentPlayer)
+    {
+        sendMessage(botInfo, 'It is not your turn.', false, true);
         return;
     }
 
@@ -247,32 +247,38 @@ function setWildColor(bot, message){
     
     newColor = {'b': 'blue', 'y': 'yellow', 'g': 'green', 'r': 'red'}[newColor] || newColor;
 
-    bot.replyPrivate(message, 'Setting the color to ' + newColor);
+    sendMessage(botInfo, 'Setting the color to ' + newColor, false, true);
 
     game.currentCard.color = newColor;
 
-    bot.replyPublicDelayed(message, playerName + ' played a ' + game.currentCard.value + ' and chose ' + newColor + ' as the new color.');
+    sendMessage(botInfo, playerName + ' played a ' + game.currentCard.value + ' and chose ' + newColor + ' as the new color.', true);
 
-    endTurn(bot, message);
+    endTurn(botInfo, game);
+    
+    var asyncs = [];
 
     if (game.currentCard.value === 'draw 4'){
-        drawCards(bot, message, game.turnOrder[0], 4);
-        endTurn(bot, message);
+        asyncs.push(drawCards(botInfo, game, game.turnOrder[0], 4).then(function(){
+            endTurn(botInfo, game);
+        }));
     }
+    
+    Promise.all(asyncs).then(function(){
+        saveGame(botInfo, game).then(function(){
+            reportHand(botInfo, game, true);
+            announceTurn(botInfo, game);
+        });
+    });
 
-    reportHand(bot, message, true);
-    announceTurn(bot, message);
 }
 
-function endTurn(bot, message){
-    var game = getGame(bot, message);
-
+function endTurn(botInfo, game){
     if (!game){
         return;
     }
 
     if (!game.started){
-        bot.replyPrivate(message, 'The game has not yet been started.');
+        sendMessage(botInfo, 'The game has not yet been started.', false, true);
         return;
     }
 
@@ -280,16 +286,17 @@ function endTurn(bot, message){
     game.turnOrder.push(game.turnOrder.shift());
 }
 
-function reportHand(bot, message, isDelayed){
-    var game = getGame(bot, message),
-    playerName = message.user_name;
-
+function reportHand(botInfo, game, isDelayed){
     if (!game){
         return;
     }
 
+    var playerName = botInfo.message.user_name;
+
+
     if (!game.started){
-        bot.replyPrivate(message, 'The game has not yet started.');
+        sendMessage(botInfo, 'The game has not yet started.', false, true);
+        return;
     }
 
     var player = game.players[playerName];
@@ -304,49 +311,40 @@ function reportHand(bot, message, isDelayed){
         });        
     }
 
-    if (isDelayed)    {
-        bot.replyPrivateDelayed(message, {
+    sendMessage(botInfo, {
             "text": 'Your current hand is:',
             "attachments": hand
-        });
-    }
-    else {
-        bot.replyPrivate(message, {
-            "text": 'Your current hand is:',
-            "attachments": hand
-        });
-
-    }
+        }, true, isDelayed);
 }
 
-function beginGame(bot, message){
-    var user = message.user_name,
-        game = getGame(bot, message);
 
+function beginGame(botInfo, game){
     if (!game){
         return;
     }
 
+    var user = botInfo.message.user_name;
+
     if (game.player1 !== user){
-        bot.replyPrivate(message, 'Only player 1 (' + game.player1 + ') can start the game.');
+        sendMessage(botInfo, 'Only player 1 (' + game.player1 + ') can start the game.', false, true);
         return;
     }
 
     if (Object.keys(game.players).length < 2){
-        bot.replyPrivate(message, 'You need at least two players to begin playing.');
+        sendMessage(botInfo, 'You need at least two players to begin playing.', false, true);
         return;
     }
 
     if (game.started){
-        bot.replyPrivate(message, 'The game is already started.');
-        reportTurnOrder(bot, message, true, true);
+        sendMessage(botInfo, 'The game is already started.', false, true);
+        reportTurnOrder(botInfo, game, true, true);
         return;
     }
 
     game.started = true;
     var drawRequests = [];
 
-    bot.replyPublic(message, 'Game has started! Shuffling the deck and dealing the hands.');
+    sendMessage(botInfo, 'Game has started! Shuffling the deck and dealing the hands.');
 
     request({
         uri: 'http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2',
@@ -355,7 +353,7 @@ function beginGame(bot, message){
         game.deckId = result.deck_id;
     }).then(function(){
         for (var playerName in game.players){
-            var drawRequest = drawCards(bot, message, playerName, 7);
+            var drawRequest = drawCards(botInfo, game, playerName, 7);
 
             drawRequests.push(drawRequest);                    
         }
@@ -372,47 +370,47 @@ function beginGame(bot, message){
         drawRequests.push(startingCardRequest);
     }).then(function(){
         Promise.all(drawRequests).then(function(){
-            announceTurn(bot, message);
-            reportHand(bot, message, true);
+            announceTurn(botInfo, game);
+            reportHand(botInfo, game, true);
         });
     });
 }
 
-function drawCard(bot, message){
-    var game = getGame(bot, message),
-        playerName = message.user_name;
 
+function drawCard(botInfo, game){
     if (!game){
         return;
     }
 
+    var playerName = botInfo.message.user_name;
+
     if (!game.started){
-        bot.replyPrivate(message, 'The game has not yet started.');
+        sendMessage(botInfo, 'The game has not yet started.', false, true);
         return;
     }
 
-    drawCards(bot, message, playerName, 1)
+    drawCards(botInfo, game, playerName, 1)
         .then(function(){
-            bot.replyPrivate(message, 'You now have ' + game.players[playerName].hand.length + ' cards.');
-            reportHand(bot, message, true);
+            sendMessage(botInfo, 'You now have ' + game.players[playerName].hand.length + ' cards.', false, true);
+            reportHand(botInfo, game, true);
         });
 }
 
-function drawCards(bot, message, playerName, count){
-    console.log('Drawing ' + count + ' cards for ' + playerName);
-    var game = getGame(bot, message, true);
-
+function drawCards(botInfo, game, playerName, count){
     if (!game){
         return;
     }
+
+    console.log('Drawing ' + count + ' cards for ' + playerName);
 
     return request({
         uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=' + count,
         json: true
     }).then(function(result){
         var player = game.players[playerName];
-        console.log('Drew ' + result.cards.length + ' cards, adding to ' + playerName + ' hand');
         var cardCount = result.cards.length;
+
+        console.log('Drew ' + cardCount + ' cards, adding to ' + playerName + ' hand');
 
         for (var j = 0; j < cardCount; j++){
             var card = getUnoCard(result.cards[j]);
@@ -423,14 +421,16 @@ function drawCards(bot, message, playerName, count){
         console.log(result.remaining + ' cards remaining in the deck.');
 
         if (result.remaining <= 10){
-            bot.replyPublicDelayed(message, 'Less than 10 cards remaining. Reshuffling the deck.');
+            sendMessage(botInfo, 'Less than 10 cards remaining. Reshuffling the deck.', true);
             request({
                 uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/shuffle/',
                 json: true
             }).then(function(shuffleResult){
-                bot.replyPublicDelayed(message, 'Deck reshuffled.');
+                sendMessage(botInfo, 'Deck reshuffled.', true);
             });
         }
+    }).then(function(){
+        saveGame(botInfo, game);  
     }).catch(function(err){
         console.log(err);
     });
@@ -464,23 +464,22 @@ function getStandardCard(unoCard){
     
 }
 
-function announceTurn(bot, message){
-    var game = getGame(bot, message);
-
+function announceTurn(botInfo, game){
     if (!game){
         return;
     }
 
-    bot.replyPublicDelayed(message, {
+    sendMessage(botInfo, {
         "text": 'The current up card is:',
         "attachments": [{            
             "color": colorToHex(game.currentCard.color),
             "text": game.currentCard.color + ' ' + game.currentCard.value        
         }]
-    });
-    bot.replyPublicDelayed(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType `/uno play [card]`, `/uno draw` or `/uno status` to begin your turn.');
+    }, true);
+    
+    sendMessage(botInfo, 'It is ' + game.turnOrder[0] + '\'s turn.\nType `/uno play [card]`, `/uno draw` or `/uno status` to begin your turn.', true);
 }
-*/
+
 
 function quitGame(botInfo, game){
     var user = botInfo.message.user_name;
@@ -595,17 +594,19 @@ function getGame(botInfo, suppressNotice, callback){
 function saveGame(botInfo, game, callback){
     console.log('Saving game ' + game.id);
     
-    controller.storage.channels.save(game, function(err){
+    var ret = controller.storage.channels.saveAsync(game, function(err){
         if (err){
             console.log('Error saving: ' + err);
             return;
         }
         console.log(game.id + ' saved.');
-    
-        if (callback){
-            callback();
-        }
     });
+    
+    if (callback){
+        return ret.then(function(){callback()});
+    }
+    
+    return ret;
 }
 
 function reportCurrentCard(botInfo, game, isPrivate, isDelayed){
@@ -730,7 +731,7 @@ function sendMessage(botInfo, message, isDelayed, isPrivate){
     botInfo.bot.replyPublic(botInfo.message, message);
 }
 
-/*
+
 controller.hears(['uptime', 'identify yourself', 'who are you', 'what is your name'],
     'direct_message,direct_mention,mention', function(bot, message) {
 
@@ -760,4 +761,3 @@ function formatUptime(uptime) {
     uptime = uptime + ' ' + unit;
     return uptime;
 }
-*/
