@@ -112,6 +112,7 @@ controller.hears(['^test$'], ['slash_command'], function(bot, message){
         text: 'What would you like to do?',
         attachments: [
             {
+                text: 'Choose an action.',
                 callback_id: 'test_callback',
                 attachment_type: 'default',
                 actions: [
