@@ -310,7 +310,7 @@ function getGame(botInfo, suppressNotice, callback){
     controller.storage.channels.get(channel, function(err, game){
         if (err){
             console.log(err);
-            botInfo.bot.replyPrivate(botInfo.message, 'There was a problem retrieving the game.');
+            sendMessage(botInfo, 'There was a problem retrieving the game.', false, true)
             return;
         }
         
@@ -318,7 +318,7 @@ function getGame(botInfo, suppressNotice, callback){
         
         if (!game || !game.initialized){
             if (!suppressNotice){
-                botInfo.bot.replyPrivate(botInfo.message, 'There is no game yet.');
+                sendMessage(botInfo, 'There is no game yet.', false, true);
             }
             
             console.log('No game or not initialized');
@@ -388,7 +388,7 @@ function joinGame(botInfo, game, userName){
     }
 
     if (game.players[user]){
-        botInfo.bot.replyPrivate(botInfo.message, user + ' has already joined the game!');
+        sendMessage(botInfo, user + ' has already joined the game!', false, true);
         return;
     }
 
@@ -397,7 +397,7 @@ function joinGame(botInfo, game, userName){
     };
     game.turnOrder.push(user);
 
-    botInfo.bot.replyPublic(botInfo.message, user + ' has joined the game.');
+    sendMessage(botInfo, user + ' has joined the game.');
     
     saveGame(botInfo, game).then(function(){
         reportTurnOrder(botInfo, game, false, true);
@@ -587,22 +587,7 @@ function reportCurrentCard(botInfo, game, isPrivate, isDelayed){
         }]
     };
 
-    if (isPrivate){
-        if (isDelayed){
-            botInfo.bot.replyPrivateDelayed(botInfo.message, msg);
-            return;
-        }
-
-        botInfo.bot.replyPrivate(botInfo.message, msg);
-        return;
-    }
-
-    if (isDelayed){
-        botInfo.bot.replyPublicDelayed(botInfo.message, msg);
-        return;
-    }
-
-    botInfo.bot.replyPublic(botInfo.message, msg);
+    sendMessage(botInfo, msg, isDelayed, isPrivate);
 }
 
 function reportHand(botInfo, game, isDelayed){
@@ -683,22 +668,48 @@ function saveGame(botInfo, game){
 }
 
 function sendMessage(botInfo, message, isDelayed, isPrivate){
+    var msg = message;
+    
+    if (botInfo.message.callback_id){
+        if (msg.text){
+            msg.attachments = message.attachments || [];
+            
+            if (msg.attachments.length === 0){
+                msg.attachments.push({
+                    callback_id: botInfo.message.callback_id
+                });
+            } else{
+                msg.attachments.forEach(function(c){
+                    c.callback_id = botInfo.message.callback_id;
+                });
+            }
+        } else {
+            msg = {
+                text: message,
+                attachments: [
+                    {
+                        callback_id: botInfo.message.callback_id
+                    }]
+            };
+        }
+    }
+    
     if (isDelayed){
         if (isPrivate){
-            botInfo.bot.replyPrivateDelayed(botInfo.message, message);
+            botInfo.bot.replyPrivateDelayed(botInfo.message, msg);
             return;
         }
         
-        botInfo.bot.replyPublicDelayed(botInfo.message, message);
+        botInfo.bot.replyPublicDelayed(botInfo.message, msg);
         return;
     }
     
     if (isPrivate){
-        botInfo.bot.replyPrivate(botInfo.message, message);
+        botInfo.bot.replyPrivate(botInfo.message, msg);
         return;
     }
     
-    botInfo.bot.replyPublic(botInfo.message, message);
+    botInfo.bot.replyPublic(botInfo.message, msg);
 }
 
 function setWildColor(botInfo, game){
