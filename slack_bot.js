@@ -113,6 +113,8 @@ controller.hears(['^test$'], ['slash_command'], function(bot, message){
         attachments: [
             {
                 title: 'attachment title',
+                callback_id: 'test_callback',
+                attachment_type: 'default',
                 actions: [
                     {
                         name: 'action1name',
