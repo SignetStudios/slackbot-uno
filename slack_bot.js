@@ -640,6 +640,11 @@ function reportTurnOrder(botInfo, game, isPrivate, isDelayed){
     if (!game){
         return;
     }
+    
+    if (!game.initialized){
+        sendMessage(botInfo, 'There is currently no game.', false, isPrivate);
+        return;
+    }
 
     if (game.started){
         reportCurrentCard(botInfo, game, isPrivate, isDelayed);
