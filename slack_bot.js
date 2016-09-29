@@ -708,7 +708,7 @@ function newGame(){
     return {
         initialized: false,
         started: false,
-        players: [],
+        players: {},
         deckId: '',
         turnOrder: [],
         currentCard: {}
