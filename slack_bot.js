@@ -480,6 +480,10 @@ function announceTurn(bot, message){
 function quitGame(botInfo, game){
     var user = botInfo.message.user_name,
         channel = botInfo.message.channel;
+        
+    if (!game){
+        return;
+    }
 
     if (!game.players[user]){
         sendMessage(botInfo, 'You weren\'t playing to begin with.', false, true);
