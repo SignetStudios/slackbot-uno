@@ -580,7 +580,7 @@ function saveGame(botInfo, game, callback){
         console.log(arguments);
         console.log(game.id + ' saved.');
         
-        controller.storage.channels.all(function(err, data){
+        /*controller.storage.channels.all(function(err, data){
             if (err){
                 console.log(err);
             }
@@ -591,7 +591,7 @@ function saveGame(botInfo, game, callback){
                 console.log(data[i]);
             }
         });
-        
+        */
         if (callback){
             callback();
         }
