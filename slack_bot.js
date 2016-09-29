@@ -1,14 +1,17 @@
 var Botkit = require('botkit'),
     os = require('os'),
-    redis = require('botkit-storage-redis')({
+    /*redis = require('botkit-storage-redis')({
         host: process.env.REDIS_HOST,
         port: process.env.REDIS_PORT,
         password: process.env.REDIS_PASSWORD,
         
-    }),
+    }),*/
+    firebase = require('botkit-storage-firebase'){
+      firebase_uri: 'https://slackbot-uno.firebaseio.com/'
+    },
     controller = Botkit.slackbot({
         //debug: true,
-        storage: redis
+        storage: firebase
     }),
     TOKEN = process.env.SLACK_TOKEN,
     request = require('request-promise'),

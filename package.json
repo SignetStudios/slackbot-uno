@@ -7,7 +7,7 @@
     "beepboop-botkit": "^1.4.1",
     "bluebird": "^3.4.6",
     "botkit": "^0.2.2",
-    "botkit-storage-redis": "^1.0.1",
+    "botkit-storage-firebase": "^1.0.0",
     "request": "^2.67.0",
     "request-promise": "^4.1.1"
   },
