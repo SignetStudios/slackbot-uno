@@ -99,7 +99,7 @@ controller.hears('^color (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?)', ['slash_c
     getGame({bot, message}, false, setWildColor);
 });
 
-controller.hears(['^draw'], ['slash_command'], function(bot, message){
+controller.hears(['^draw'], ['slash_command', 'interactive_message_callback'], function(bot, message){
     getGame({bot, message}, false, drawCard);
 });
 
@@ -109,29 +109,23 @@ controller.hears(['^pass'], ['slash_command'], function(bot, message){
 
 controller.hears(['^test$'], ['slash_command'], function(bot, message){
     bot.replyInteractive(message, {
-        text: 'Message',
+        text: 'What would you like to do?',
         attachments: [
             {
-                title: 'attachment title',
                 callback_id: 'test_callback',
                 attachment_type: 'default',
                 actions: [
                     {
-                        name: 'action1name',
-                        text: 'action1text',
-                        value: 'action1value',
-                        type: 'button'
-                    },
-                    {
-                        name: 'action2name',
-                        text: 'action2text',
-                        value: 'action2value',
+                        name: 'draw',
+                        text: 'draw',
+                        value: 'draw',
                         type: 'button'
                     }]
             }]
     });
 });
 
+/*
 controller.on('interactive_message_callback', function(bot, message){
     bot.replyPrivateDelayed(message, {
         text: 'actions: ' + message.actions,
@@ -144,6 +138,7 @@ controller.on('interactive_message_callback', function(bot, message){
     console.log('Interactive response: ');
     console.log(message);
 });
+*/
 
 
 //------- Game code begins here ------------//
