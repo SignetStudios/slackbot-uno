@@ -76,10 +76,12 @@ controller.hears('setup', ['slash_command', 'direct_mention', 'mention'], functi
 controller.hears('join', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
     getGame({bot, message}, false, joinGame);
 });
-/*
+
 controller.hears('quit', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
-    quitGame(bot, message);
+    getGame({bot, message}, false, quitGame);
 });
+
+/*
 
 controller.hears('status', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
     reportTurnOrder(bot, message, true, false);
@@ -473,14 +475,14 @@ function announceTurn(bot, message){
     });
     bot.replyPublicDelayed(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType `/uno play [card]`, `/uno draw` or `/uno status` to begin your turn.');
 }
+*/
 
-function quitGame(bot, message){
-    var user = message.user_name,
-        game = getGame(bot, message),
-        channel = message.channel;
+function quitGame(botInfo, game){
+    var user = botInfo.message.user_name,
+        channel = botInfo.message.channel;
 
     if (!game.players[user]){
-        bot.replyPrivate(message, 'You weren\'t playing to begin with.');
+        sendMessage(botInfo, 'You weren\'t playing to begin with.', false, true);
         return;
     }
 
@@ -489,28 +491,30 @@ function quitGame(bot, message){
     var player = game.turnOrder.indexOf(user);
     game.turnOrder.splice(player, 1);
 
-    bot.replyPublic(message, user + ' has left the game.');
+    sendMessage(botInfo, user + ' has left the game.');
 
     if (Object.keys(game.players).length === 0){
-        bot.replyPublicDelayed(message, 'No more players. Ending the game.');
+        sendMessage(botInfo, 'No more players. Ending the game.', true);
         games[channel] = newGame();
         return;
     }
 
     if (game.player1 === user){        
         game.player1 = Object.keys(game.players)[0];
-        bot.replyPublicDelayed(message, game.player1 + ' is the new player 1.');        
+        sendMessage(botInfo, game.player1 + ' is the new player 1.', true);
     }
 
     if (Object.keys(game.players).length === 1){
         game.started = false;
-        bot.replyPublicDelayed(message, 'Only one player remaining. Waiting for more players.');  
+        sendMessage(botInfo, 'Only one player remaining. Waiting for more players.', true);
         return;      
     }
 
-    reportTurnOrder(bot, message, false, true);
+    saveGame(botInfo, game, function(){
+        reportTurnOrder(botInfo, game, false, true);
+    });
 }
-*/
+
 
 function colorToHex(color){    
     switch(color){
@@ -657,7 +661,7 @@ function initializeGame(botInfo, game){
     var user = botInfo.message.user_name;
     
     if (game && game.initialized){
-        botInfo.bot.replyPrivate(botInfo.message, 'There is already an uno game in progress. Type `/uno join` to join the game.');
+        sendMessage(botInfo, 'There is already an uno game in progress. Type `/uno join` to join the game.', false, true);
         return;
     }
         
@@ -671,7 +675,7 @@ function initializeGame(botInfo, game){
     };
     game.turnOrder.push(user);
 
-    botInfo.bot.replyPublic(botInfo.message, user + ' has started UNO. Type `/uno join` to join the game.');
+    sendMessage(botInfo, user + ' has started UNO. Type `/uno join` to join the game.');
 
     saveGame(botInfo, game, function(){
         reportTurnOrder(botInfo, game, false, true);
@@ -693,8 +697,27 @@ function newGame(){
 function resetGame(botInfo, game){
     game = newGame();
     game.id = botInfo.message.channel;
-    botInfo.bot.replyPrivate(botInfo.message, 'Game for this channel reset.');
+    sendMessage(botInfo, 'Game for this channel reset.', false, true);
     saveGame(botInfo, game);
+}
+
+function sendMessage(botInfo, message, isDelayed, isPrivate){
+    if (isDelayed){
+        if (isPrivate){
+            botInfo.bot.replyPrivateDelayed(botInfo.message, message);
+            return;
+        }
+        
+        botInfo.bot.replyPublicDelayed(botInfo.message, message);
+        return;
+    }
+    
+    if (isPrivate){
+        botInfo.bot.replyPrivate(botInfo.message, message);
+        return;
+    }
+    
+    botInfo.bot.replyPublic(botInfo.message, message);
 }
 
 /*
