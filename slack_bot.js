@@ -2,7 +2,8 @@ var Botkit = require('botkit'),
     redis = require('botkit-storage-redis')({
         host: process.env.REDIS_HOST,
         port: process.env.REDIS_PORT,
-        password: process.env.REDIS_PASSWORD
+        password: process.env.REDIS_PASSWORD,
+        methods: ['hands']
     }),
     controller = Botkit.slackbot({
         storage: redis
