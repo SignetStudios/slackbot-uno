@@ -1,6 +1,6 @@
 var Botkit = require('botkit'),
     os = require('os'),
-    storage = require('botkit-storage-persist.js')(),
+    storage = require('/usr/src/app/storage.js')(),
     controller = Botkit.slackbot({
         debug: true,
         storage: storage
