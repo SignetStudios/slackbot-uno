@@ -594,13 +594,17 @@ function getGame(botInfo, suppressNotice, callback){
 function saveGame(botInfo, game){
     console.log('Saving game ' + game.id);
     
-    return controller.storage.channels.saveAsync(game, function(err){
+    return controller.storage.channels.saveAsync(game).then(function(){
+        console.log('This is a promise!');
+    });
+    
+/*    return controller.storage.channels.saveAsync(game, function(err){
         if (err){
             console.log('Error saving: ' + err);
             return;
         }
         console.log(game.id + ' saved.');
-    });
+    });*/
 }
 
 function reportCurrentCard(botInfo, game, isPrivate, isDelayed){
