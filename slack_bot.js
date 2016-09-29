@@ -431,8 +431,6 @@ function drawCards(botInfo, game, playerName, count){
                 sendMessage(botInfo, 'Deck reshuffled.', true);
             });
         }
-    }).then(function(){
-        saveGame(botInfo, game);  
     }).catch(function(err){
         console.log(err);
     });
@@ -504,7 +502,7 @@ function quitGame(botInfo, game){
 
     if (Object.keys(game.players).length === 0){
         game = newGame();
-        saveGame(botInfo, game, function(){
+        saveGame(botInfo, game).then(function(){
             sendMessage(botInfo, 'No more players. Ending the game.', true);
         });
         
@@ -518,14 +516,14 @@ function quitGame(botInfo, game){
 
     if (Object.keys(game.players).length === 1){
         game.started = false;
-        saveGame(botInfo, game, function(){
+        saveGame(botInfo, game).then(function(){
             sendMessage(botInfo, 'Only one player remaining. Waiting for more players.', true);
         });
 
         return;      
     }
 
-    saveGame(botInfo, game, function(){
+    saveGame(botInfo, game).then(function(){
         reportTurnOrder(botInfo, game, false, true);
     });
 }
@@ -593,22 +591,16 @@ function getGame(botInfo, suppressNotice, callback){
     });
 }
 
-function saveGame(botInfo, game, callback){
+function saveGame(botInfo, game){
     console.log('Saving game ' + game.id);
     
-    var ret = controller.storage.channels.saveAsync(game, function(err){
+    return controller.storage.channels.saveAsync(game, function(err){
         if (err){
             console.log('Error saving: ' + err);
             return;
         }
         console.log(game.id + ' saved.');
     });
-    
-    if (callback){
-        return ret.then(function(){callback()});
-    }
-    
-    return ret;
 }
 
 function reportCurrentCard(botInfo, game, isPrivate, isDelayed){
@@ -690,7 +682,7 @@ function initializeGame(botInfo, game){
 
     sendMessage(botInfo, user + ' has started UNO. Type `/uno join` to join the game.');
 
-    saveGame(botInfo, game, function(){
+    saveGame(botInfo, game).then(function(){
         reportTurnOrder(botInfo, game, false, true);
     });
 
@@ -710,8 +702,9 @@ function newGame(){
 function resetGame(botInfo, game){
     game = newGame();
     game.id = botInfo.message.channel;
-    sendMessage(botInfo, 'Game for this channel reset.', false, true);
-    saveGame(botInfo, game);
+    saveGame(botInfo, game).then(function(){
+        sendMessage(botInfo, 'Game for this channel reset.', false, true);
+    });
 }
 
 function sendMessage(botInfo, message, isDelayed, isPrivate){
