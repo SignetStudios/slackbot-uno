@@ -559,7 +559,7 @@ function joinGame(botInfo, game, userName){
 
     botInfo.bot.replyPublic(botInfo.message, user + ' has joined the game.');
     
-    saveGame(botInfo, game, function(){
+    saveGame(botInfo, game).then(function(){
         reportTurnOrder(botInfo, game, false, true);
     });
 
