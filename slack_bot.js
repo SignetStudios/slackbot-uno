@@ -133,7 +133,13 @@ controller.hears(['^test$'], ['slash_command'], function(bot, message){
 });
 
 controller.on('interactive_message_callback', function(bot, message){
-    bot.replyPrivateDelayed(message, 'actions: ' + message.actions);
+    bot.replyPrivateDelayed(message, {
+        text: 'actions: ' + message.actions,
+        attachments: [
+            {
+                callback_id: message.callback_id
+            }]
+    });
     console.log('callback_id: ' + message.callback_id);
     console.log('Interactive response: ');
     console.log(message);
