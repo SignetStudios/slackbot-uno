@@ -1,22 +1,16 @@
 var Botkit = require('botkit'),
-    os = require('os'),
-    storage = require('./storage.js')({
-        debug: true,
-        logger: {
-            debug: function(val){
-                console.log('DEBUG: ' + val);
-            },
-            error: function(val){
-                console.log('ERROR: ' + val);
-            }
-        }
+    redis = require('botkit-storage-redis')({
+        host: process.env.REDIS_HOST,
+        port: process.env.REDIS_PORT,
+        password: process.env.REDIS_PASSWORD
     }),
     controller = Botkit.slackbot({
-        storage: storage
+        storage: redis
     }),
     TOKEN = process.env.SLACK_TOKEN,
     request = require('request-promise'),
     Promise = require('bluebird'),
+    os = require('os'),
     PORT = process.env.PORT || 8080,
     VERIFY_TOKEN = process.env.SLACK_VERIFY_TOKEN;
 
@@ -39,6 +33,7 @@ if (TOKEN) {
 }
 
 Promise.promisifyAll(controller.storage.channels);
+Promise.promisifyAll(controller.storage.users);
 
 controller.setupWebserver(PORT, function (err, webserver) {
   if (err) {
@@ -582,7 +577,11 @@ function getGame(botInfo, suppressNotice, callback){
 function saveGame(botInfo, game, callback){
     console.log('Saving game ' + game.id);
     console.log(game);
-    controller.storage.channels.save(game, function(err){
+    
+    var save = JSON.parse(JSON.stringify(game));
+    save.players = Object.keys(game.players);
+    
+    controller.storage.channels.save(save, function(err){
         if (err){
             console.log('Error saving: ' + err);
             return;
@@ -590,21 +589,26 @@ function saveGame(botInfo, game, callback){
         console.log(arguments);
         console.log(game.id + ' saved.');
         
-        /*controller.storage.channels.all(function(err, data){
-            if (err){
-                console.log(err);
-            }
+        var userSaves = [];
+        
+        for (var i = 0; i < save.players.length; i++){
+            var user = save.players[i];
+            console.log('Saving user ' + user);
+            var userSave = controller.storage.users.saveAsync({
+                id: user,
+                hand: game.players[user].hand
+            }).then(function(){
+                console.log('User ' + user + ' saved.');
+            });
             
-            console.log('Data currently in storage:');
-            console.log(data);
-            for (var i = data.length; i < data.length; i++){
-                console.log(data[i]);
+            userSaves.push(userSave);
+        }
+        
+        Promise.all(userSaves).then(function(){
+            if (callback){
+                callback();
             }
         });
-        */
-        if (callback){
-            callback();
-        }
     });
 }
 
@@ -693,9 +697,10 @@ function initializeGame(botInfo, game){
 
     botInfo.bot.replyPublic(botInfo.message, user + ' has started UNO. Type `/uno join` to join the game.');
 
-    saveGame(botInfo, game);
+    saveGame(botInfo, game, function(){
+        reportTurnOrder(botInfo, game, false, true);
+    });
 
-    //reportTurnOrder(bot, message, false, true);
 }
 
 function newGame(){
