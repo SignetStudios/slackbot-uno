@@ -661,7 +661,7 @@ function reportTurnOrder(botInfo, game, isPrivate, isDelayed){
         currentOrder = currentOrder + '\n' + i + '. ' + playerName + cardReport; 
     }
 
-    sendMessage(botInfo, 'Current playing order:\n' + currentOrder, true, isPrivate);
+    sendMessage(botInfo, 'Current playing order:\n' + currentOrder, game.started || isDelayed, isPrivate);
 }
 
 function initializeGame(botInfo, game){
