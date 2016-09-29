@@ -555,11 +555,10 @@ function getGame(botInfo, suppressNotice, callback){
         if (err){
             console.log(err);
             botInfo.bot.replyPrivate(botInfo.message, 'There was a problem retrieving the game.');
-            //return;
+            return;
         }
         
-        console.log('Game info retrieved:');
-        console.log(game);
+        console.log('Game info retrieved for ' + channel);
         
         if (!game || !game.initialized){
             if (!suppressNotice){
@@ -577,14 +576,12 @@ function getGame(botInfo, suppressNotice, callback){
 
 function saveGame(botInfo, game, callback){
     console.log('Saving game ' + game.id);
-    console.log(game);
     
     controller.storage.channels.save(game, function(err){
         if (err){
             console.log('Error saving: ' + err);
             return;
         }
-        console.log(arguments);
         console.log(game.id + ' saved.');
     
         if (callback){
