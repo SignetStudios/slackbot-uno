@@ -370,8 +370,10 @@ function beginGame(botInfo, game){
         drawRequests.push(startingCardRequest);
     }).then(function(){
         Promise.all(drawRequests).then(function(){
-            announceTurn(botInfo, game);
-            reportHand(botInfo, game, true);
+            saveGame(botInfo, game).then(function(){
+                announceTurn(botInfo, game);
+                reportHand(botInfo, game, true);
+            });
         });
     });
 }
