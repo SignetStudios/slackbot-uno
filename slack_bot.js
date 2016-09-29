@@ -87,12 +87,14 @@ controller.hears('status', ['slash_command', 'direct_mention', 'mention'], funct
     });
 });
 
+controller.hears('start', ['slash_command'], function(bot, message){
+    getGame({bot, message}, false)
+    beginGame(bot, message);
+});
+
 /*
 
 
-controller.hears('start', ['slash_command'], function(bot, message){
-    beginGame(bot, message);
-});
 
 //The following should hear most combinations of cards that can be played
 controller.hears('^play(?: (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?|w(?:ild)?|d(?:raw ?4)?)(?: ?([1-9]|s(?:kip)?|r(?:everse)?|d(?:raw ?2)?))?)?$', ['slash_command'], function(bot, message){
@@ -500,6 +502,7 @@ function quitGame(botInfo, game){
     sendMessage(botInfo, user + ' has left the game.');
 
     if (Object.keys(game.players).length === 0){
+        game = newGame();
         saveGame(botInfo, game, function(){
             sendMessage(botInfo, 'No more players. Ending the game.', true);
         });
@@ -641,11 +644,6 @@ function reportTurnOrder(botInfo, game, isPrivate, isDelayed){
         return;
     }
     
-    if (!game.initialized){
-        sendMessage(botInfo, 'There is currently no game.', false, isPrivate);
-        return;
-    }
-
     if (game.started){
         reportCurrentCard(botInfo, game, isPrivate, isDelayed);
     }
