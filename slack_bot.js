@@ -1,6 +1,6 @@
 var Botkit = require('botkit'),
     os = require('os'),
-    storage = require('./lib/storage/simple_storage.js')(),
+    storage = require('./botkit-storage-persist.js')(),
     controller = Botkit.slackbot({
         debug: true,
         storage: storage
@@ -39,16 +39,6 @@ controller.setupWebserver(PORT, function (err, webserver) {
 
   // Setup our slash command webhook endpoints
   controller.createWebhookEndpoints(webserver);
-});
-
-controller.storage.channels.all(function(err, data){
-    if (err){
-        console.log(err);
-        return;
-    }
-    
-    games = data;
-    console.log('Games loaded!');
 });
 
 
@@ -560,7 +550,7 @@ function getGame(botInfo, suppressNotice, callback){
         if (err){
             console.log(err);
             botInfo.bot.replyPrivate(botInfo.message, 'There was a problem retrieving the game.');
-            return;
+            //return;
         }
         
         console.log('Game info retrieved:');
