@@ -579,17 +579,17 @@ function saveGame(botInfo, game, callback){
     console.log('Saving game ' + game.id);
     console.log(game);
     
-    var save = JSON.parse(JSON.stringify(game));
-    save.players = Object.keys(game.players);
+    //var save = JSON.parse(JSON.stringify(game));
+    //save.players = Object.keys(game.players);
     
-    controller.storage.channels.save(save, function(err){
+    controller.storage.channels.save(game, function(err){
         if (err){
             console.log('Error saving: ' + err);
             return;
         }
         console.log(arguments);
         console.log(game.id + ' saved.');
-        
+        /*
         var userSaves = [];
         
         for (var i = 0; i < save.players.length; i++){
@@ -604,12 +604,12 @@ function saveGame(botInfo, game, callback){
             
             userSaves.push(userSave);
         }
-        
-        Promise.all(userSaves).then(function(){
+        */
+        //Promise.all(userSaves).then(function(){
             if (callback){
                 callback();
             }
-        });
+        //});
     });
 }
 
