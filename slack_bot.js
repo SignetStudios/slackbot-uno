@@ -59,6 +59,7 @@ controller.hears('new', ['slash_command'/*, 'direct_mention', 'mention'*/], func
     getGame({bot, message}, true, initializeGame);
 });
 
+//TODO: Remove when done testing (or not)
 controller.hears('reset thisisthepassword', ['slash_command'], function(bot, message){
     getGame({bot, message}, true, resetGame);
 });
@@ -186,7 +187,9 @@ function playCard(botInfo, game){
     game.currentCard = cardToPlay;
 
     if (cardToPlay.color === 'wild'){
-        sendMessage(botInfo, 'Type `/uno color [color]` to specify what the new color should be.', false, true);
+        saveGame(botInfo, game).then(function(){
+            sendMessage(botInfo, 'Type `/uno color [color]` to specify what the new color should be.', false, true);
+        });
         return;
     }
 
