@@ -495,7 +495,7 @@ function quitGame(botInfo, game){
 
     if (Object.keys(game.players).length === 0){
         sendMessage(botInfo, 'No more players. Ending the game.', true);
-        games[channel] = newGame();
+        saveGame(botInfo, game);
         return;
     }
 
@@ -507,6 +507,7 @@ function quitGame(botInfo, game){
     if (Object.keys(game.players).length === 1){
         game.started = false;
         sendMessage(botInfo, 'Only one player remaining. Waiting for more players.', true);
+        saveGame(botInfo, game);
         return;      
     }
 
