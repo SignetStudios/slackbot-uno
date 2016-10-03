@@ -519,6 +519,14 @@ function playCard(botInfo, game){
     }
 
     sendMessage(botInfo, 'playing ' + cardToPlay.color + ' ' + cardToPlay.value, false, true);
+    
+    if (player.hand.length === 1){
+        sendMessage(botInfo, playerName + ' only has one card left in their hand!', true);
+    } else if (player.hand.length === 0){
+        sendMessage(botInfo, playerName + ' played their final card.', true);
+        sendMessage(botInfo, playerName + ' wins!');
+    }
+
 
     var asyncs = [];
 
