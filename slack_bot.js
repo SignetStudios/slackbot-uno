@@ -54,7 +54,10 @@ var suitMappings = {'HEARTS': 'red', 'SPADES': 'green', 'CLUBS': 'yellow', 'DIAM
 //TODO: Allow for commands via @mentions as well
 
 controller.hears('^new', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
-    getGame({bot, message}, true, initializeGame);
+    var botInfo = {bot, message};
+    getGame(botInfo, true).then(function(game){
+        initializeGame(botInfo, game)
+    });
 });
 
 //TODO: Remove when done testing (or not)
@@ -81,7 +84,8 @@ controller.hears('^quit', ['slash_command'/*, 'direct_mention', 'mention'*/], fu
 });
 
 controller.hears('^status', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
-    getGame({bot, message}, false, function(botInfo, game){
+    var botInfo = {bot, message};
+    getGame({bot, message}, false).then(function(game){
         reportHand(botInfo, game);
         reportTurnOrder(botInfo, game, true, false);
     });
