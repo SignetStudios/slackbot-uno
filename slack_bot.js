@@ -312,6 +312,17 @@ function drawCards(botInfo, game, playerName, count){
     });
 }
 
+function endGame(botInfo, game){
+    if (!game){
+        return;
+    }
+    
+    game = newGame();
+    game.id = botInfo.message.channel;
+    
+    saveGame(botInfo, game);
+}
+
 function endTurn(botInfo, game){
     if (!game){
         return;
@@ -525,6 +536,8 @@ function playCard(botInfo, game){
     } else if (player.hand.length === 0){
         sendMessage(botInfo, playerName + ' played their final card.', true);
         sendMessage(botInfo, playerName + ' wins!');
+        endGame(botInfo, game);
+        return;
     }
 
 
