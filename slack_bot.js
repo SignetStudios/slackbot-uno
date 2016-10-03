@@ -611,7 +611,7 @@ function reportHand(botInfo, game, isDelayed){
     sendMessage(botInfo, {
             "text": 'Your current hand is:',
             "attachments": hand
-        }, true, isDelayed);
+        }, isDelayed, true);
 }
 
 function reportTurnOrder(botInfo, game, isPrivate, isDelayed){
