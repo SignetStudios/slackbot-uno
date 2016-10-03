@@ -100,7 +100,7 @@ controller.hears('^color (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?)', ['slash_c
     getGame({bot, message}, false, setWildColor);
 });
 
-controller.hears(['^draw'], ['interactive_message_callback'], function(bot, message){
+controller.hears(['^draw'], ['slash_command'], function(bot, message){
     getGame({bot, message}, false, drawCard);
 });
 
@@ -299,13 +299,7 @@ function endTurn(botInfo, game){
 function getGame(botInfo, suppressNotice, isInteractive){
     var channel = botInfo.message.channel;
 
-    return controller.storage.channels.getAsync(channel).then(function(err, game){
-        if (err){
-            console.log(err);
-            sendMessage(botInfo, 'There was a problem retrieving the game.', isInteractive, true);
-            return undefined;
-        }
-        
+    return controller.storage.channels.getAsync(channel).then(function(game){
         console.log('Game info retrieved for ' + channel);
         
         if (!game || !game.initialized){
@@ -318,6 +312,10 @@ function getGame(botInfo, suppressNotice, isInteractive){
         }
         
         return game;
+    }).error(function(err){
+        console.log(err);
+        sendMessage(botInfo, 'There was a problem retrieving the game.', isInteractive, true);
+        return undefined;
     });
 }
 
