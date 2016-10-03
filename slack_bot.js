@@ -87,7 +87,7 @@ controller.hears('^status', ['slash_command'/*, 'direct_mention', 'mention'*/], 
     var botInfo = {bot, message};
     getGame({bot, message}, false).then(function(game){
         reportHand(botInfo, game);
-        reportTurnOrder(botInfo, game, true, false);
+        reportTurnOrder(botInfo, game, true, true);
     });
 });
 
