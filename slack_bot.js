@@ -56,17 +56,21 @@ var suitMappings = {'HEARTS': 'red', 'SPADES': 'green', 'CLUBS': 'yellow', 'DIAM
 controller.hears('^new', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
     var botInfo = {bot, message};
     getGame(botInfo, true).then(function(game){
-        initializeGame(botInfo, game)
+        initializeGame(botInfo, game);
     });
 });
 
 //TODO: Remove when done testing (or not)
 controller.hears('^reset thisisthepassword$', ['slash_command'], function(bot, message){
-    getGame({bot, message}, true, resetGame);
+    var botInfo = {bot, message};
+    getGame(botInfo, true).then(function(game){
+        resetGame(botInfo, game);
+    });
 });
 
 controller.hears('^setup', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
-    getGame({bot, message}, false, function(botInfo, game){
+    var botInfo = {bot, message};
+    getGame(botInfo).then(function(game){
         for (var i = 2; i <= 2; i++){
             var mockUser = 'Player' + i;
     
@@ -76,40 +80,59 @@ controller.hears('^setup', ['slash_command'/*, 'direct_mention', 'mention'*/], f
 });
 
 controller.hears('^join', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
-    getGame({bot, message}, false, joinGame);
+    var botInfo = {bot, message};
+    getGame(botInfo).then(function(game){
+        joinGame(botInfo, game);
+    });
 });
 
 controller.hears('^quit', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
-    getGame({bot, message}, false, quitGame);
+    var botInfo = {bot, message};
+    getGame(botInfo).then(function(game){
+        quitGame(botInfo, game);
+    });
 });
 
 controller.hears('^status', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
     var botInfo = {bot, message};
-    getGame({bot, message}, false).then(function(game){
+    getGame(botInfo).then(function(game){
         reportHand(botInfo, game);
         reportTurnOrder(botInfo, game, true, true);
     });
 });
 
 controller.hears('^start', ['slash_command'], function(bot, message){
-    getGame({bot, message}, false, beginGame);
+    var botInfo = {bot, message};
+    getGame(botInfo).then(function(game){
+        beginGame(botInfo, game);
+    });
 });
 
 //The following should hear most combinations of cards that can be played
 controller.hears('^play(?: (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?|w(?:ild)?|d(?:raw ?4)?)(?: ?([1-9]|s(?:kip)?|r(?:everse)?|d(?:raw ?2)?))?)?$', ['slash_command'], function(bot, message){
-    getGame({bot, message}, false, playCard);
+    var botInfo = {bot, message};
+    getGame(botInfo).then(function(game){
+        playCard(botInfo, game);
+    });
 });
 
 controller.hears('^color (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?)', ['slash_command'], function(bot, message){
-    getGame({bot, message}, false, setWildColor);
+    var botInfo = {bot, message};
+    getGame(botInfo).then(function(game){
+        setWildColor(botInfo, game);
+    });
 });
 
 controller.hears(['^draw'], ['slash_command'], function(bot, message){
-    getGame({bot, message}, false, drawCard);
+    var botInfo = {bot, message};
+    getGame(botInfo).then(function(game){
+        drawCard(botInfo, game);
+    });
 });
 
 controller.hears(['^pass'], ['slash_command'], function(bot, message){
-    bot.replyPrivate(message, 'I\'m sorry, I\'m afraid I can\'t do that ' + message.user_name);
+    var botInfo = {bot, message};
+    sendMessage(botInfo, 'I\'m sorry, I\'m afraid I can\'t do that ' + message.user_name, false, true);
 });
 
 controller.hears(['^test$'], ['slash_command'], function(bot, message){
@@ -133,7 +156,10 @@ controller.hears(['^test$'], ['slash_command'], function(bot, message){
 
 
 controller.hears(['^draw$'], ['interactive_message_callback'], function(bot, message){
-    getGame({bot, message}, false, drawCard, true);
+    var botInfo = {bot, message};
+    getGame(botInfo, false, true).then(function(game){
+        drawCard(botInfo, game);
+    });
 });
 
 
