@@ -82,6 +82,7 @@ controller.hears('^quit', ['slash_command'/*, 'direct_mention', 'mention'*/], fu
 
 controller.hears('^status', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
     getGame({bot, message}, false, function(botInfo, game){
+        reportHand(botInfo, game);
         reportTurnOrder(botInfo, game, true, false);
     });
 });
@@ -99,7 +100,7 @@ controller.hears('^color (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?)', ['slash_c
     getGame({bot, message}, false, setWildColor);
 });
 
-controller.hears(['^draw'], ['slash_command', 'interactive_message_callback'], function(bot, message){
+controller.hears(['^draw'], ['interactive_message_callback'], function(bot, message){
     getGame({bot, message}, false, drawCard);
 });
 
@@ -126,20 +127,11 @@ controller.hears(['^test$'], ['slash_command'], function(bot, message){
     });
 });
 
-/*
-controller.on('interactive_message_callback', function(bot, message){
-    bot.replyPrivateDelayed(message, {
-        text: 'actions: ' + message.actions,
-        attachments: [
-            {
-                callback_id: message.callback_id
-            }]
-    });
-    console.log('callback_id: ' + message.callback_id);
-    console.log('Interactive response: ');
-    console.log(message);
+
+controller.hears(['^draw$'], ['interactive_message_callback'], function(bot, message){
+    getGame({bot, message}, false, drawCard, true);
 });
-*/
+
 
 
 //------- Game code begins here ------------//
@@ -304,29 +296,28 @@ function endTurn(botInfo, game){
     game.turnOrder.push(game.turnOrder.shift());
 }
 
-function getGame(botInfo, suppressNotice, callback){
+function getGame(botInfo, suppressNotice, isInteractive){
     var channel = botInfo.message.channel;
 
-    controller.storage.channels.get(channel, function(err, game){
+    return controller.storage.channels.getAsync(channel).then(function(err, game){
         if (err){
             console.log(err);
-            sendMessage(botInfo, 'There was a problem retrieving the game.', false, true)
-            return;
+            sendMessage(botInfo, 'There was a problem retrieving the game.', isInteractive, true);
+            return undefined;
         }
         
         console.log('Game info retrieved for ' + channel);
         
         if (!game || !game.initialized){
             if (!suppressNotice){
-                sendMessage(botInfo, 'There is no game yet.', false, true);
+                sendMessage(botInfo, 'There is no game yet.', isInteractive, true);
             }
             
             console.log('No game or not initialized');
-            callback(botInfo, undefined);
-            return;
+            return undefined;
         }
         
-        callback(botInfo, game);
+        return game;
     });
 }
 
