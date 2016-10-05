@@ -761,7 +761,7 @@ function reportScores(botInfo, game, isPrivate, isDelayed){
     var stringified = '';
     
     for(var j = 0; j < currentScores.length; j++){
-        stringified += '\n' + currentScores.Name + ': ' + currentScores.Score;
+        stringified += '\n' + currentScores[j].Name + ': ' + currentScores[j].Score;
     }
     
     sendMessage(botInfo, 'Current score:\n' + stringified, isDelayed, isPrivate);
