@@ -96,9 +96,9 @@ controller.hears('^quit', ['slash_command'/*, 'direct_mention', 'mention'*/], fu
 controller.hears('^status', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
     var botInfo = {bot, message};
     getGame(botInfo).then(function(game){
-        reportScores(botInfo, game, true);
+        reportHand(botInfo, game);
         reportTurnOrder(botInfo, game, true, true);
-        reportHand(botInfo, game, true);
+        reportScores(botInfo, game, true);
     });
 });
 
@@ -718,7 +718,7 @@ function reportHand(botInfo, game, isDelayed){
 
 
     if (!game.started){
-        sendMessage(botInfo, 'The game has not yet started.', false, true);
+        sendMessage(botInfo, 'The game has not yet started.', isDelayed, true);
         return;
     }
 
