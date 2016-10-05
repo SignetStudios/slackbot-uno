@@ -485,7 +485,7 @@ function joinGame(botInfo, game, userName){
         return;
     }
 
-    if (game.turnOrder.contains(user)){
+    if (game.turnOrder.includes(user)){
         sendMessage(botInfo, user + ' has already joined the game!', false, true);
         return;
     }
