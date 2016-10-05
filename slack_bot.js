@@ -747,7 +747,10 @@ function reportScores(botInfo, game, isPrivate, isDelayed){
     
     var currentScores = [];
     
-    for (var key in Object.keys(game.players)){
+    var players = Object.keys(game.players);
+    
+    for (var i = 0; i < players.length; i++){
+        var key = players[i];
         var player = game.players[key];
         player.hand = [];
         currentScores.push({Name: key, Score: player.score ? player.score : 0 });
@@ -757,7 +760,7 @@ function reportScores(botInfo, game, isPrivate, isDelayed){
 
     var stringified = '';
     
-    for(var i = 0; i < currentScores.length; i++){
+    for(var j = 0; j < currentScores.length; j++){
         stringified += '\n' + currentScores.Name + ': ' + currentScores.Score;
     }
     
