@@ -96,8 +96,9 @@ controller.hears('^quit', ['slash_command'/*, 'direct_mention', 'mention'*/], fu
 controller.hears('^status', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
     var botInfo = {bot, message};
     getGame(botInfo).then(function(game){
-        reportHand(botInfo, game);
+        reportScores(botInfo, game, true);
         reportTurnOrder(botInfo, game, true, true);
+        reportHand(botInfo, game, true);
     });
 });
 
@@ -242,6 +243,40 @@ function beginGame(botInfo, game){
     });
 }
 
+function calculatePoints(game){
+    if (!game){
+        return 0;
+    }
+
+    var pointValues = {'wild': 50, 'draw 4': 50, 'draw 2': 20, 'skip': 20, 'reverse': 20};
+    
+    var total = 0;
+    
+    //Assume the first player in the turnOrder is the winner when calculating points
+    for (var i = 1; i < game.turnOrder.length; i++){
+        var playerName = game.turnOrder[i];
+        var player = game.players[playerName];
+        console.log('Calculating ' + playerName + ' hand score');
+        
+        var currentValue = 0;
+        
+        for (var j = 0; j < player.hand.length; j++){
+            var card = player.hand[j];
+            var value = pointValues[card.value] || Number(card.value);
+            console.log(card.color + ' ' + card.value + ' = ' + value);
+            currentValue += isNaN(value) ? 0 : value;
+        }
+        
+        console.log(playerName + ' total: ' + currentValue);
+        
+        total += currentValue;
+    }
+    
+    console.log('Total points: ' + total);
+    
+    return total;
+}
+
 function colorToHex(color){    
     switch(color){
         case 'blue': return '#0033cc';
@@ -317,8 +352,41 @@ function endGame(botInfo, game){
         return;
     }
     
-    game = newGame();
-    game.id = botInfo.message.channel;
+    var winner = game.turnOrder[0],
+        points = calculatePoints(game);
+    
+    sendMessage(botInfo, winner + ' played their final card.', true);
+    sendMessage(botInfo, winner + ' has won the hand, and receives ' + points + ' points.', true);
+
+    endTurn(botInfo, game);
+    
+    game.players[winner].points += points;
+    
+    var currentScores = [];
+    
+    for (var key in Object.keys(game.players)){
+        var player = game.players[key];
+        player.hand = [];
+        currentScores.push({Name: key, Score: player.score ? player.score : 0 });
+    }
+    
+    currentScores.sort(function(a, b){ return b.Score - a.Score; });
+    
+    reportScores(botInfo, game, false, true);
+
+    if (currentScores[0].Score >= 500){
+        //Player won the game; reset the game to a 'new' state
+        var gameWinner = currentScores[0];
+        sendMessage(botInfo, gameWinner.Name + ' has won the game with ' + gameWinner.Score + ' points!', true);
+        
+        game = newGame();
+        game.id = botInfo.message.channel;
+    } else {
+        //Leave the game state, but mark as not started to trigger a new deal
+        game.started = false;
+        
+        sendMessage(botInfo, game.player1 + ', type `/uno start` to begin a new hand.', true);
+    }
     
     saveGame(botInfo, game);
 }
@@ -417,14 +485,19 @@ function joinGame(botInfo, game, userName){
         return;
     }
 
-    if (game.players[user]){
+    if (game.turnOrder.contains(user)){
         sendMessage(botInfo, user + ' has already joined the game!', false, true);
         return;
     }
 
-    game.players[user] = {
-        hand: []
-    };
+    if (game.players[user]){
+        game.players[user].hand = [];
+    } else {
+        game.players[user] = {
+            hand: []
+        };
+    }
+
     game.turnOrder.push(user);
 
     sendMessage(botInfo, user + ' has joined the game.');
@@ -534,8 +607,6 @@ function playCard(botInfo, game){
     if (player.hand.length === 1){
         sendMessage(botInfo, playerName + ' only has one card left in their hand!', true);
     } else if (player.hand.length === 0){
-        sendMessage(botInfo, playerName + ' played their final card.', true);
-        sendMessage(botInfo, playerName + ' wins!');
         endGame(botInfo, game);
         return;
     }
@@ -579,7 +650,15 @@ function quitGame(botInfo, game){
         return;
     }
 
-    delete game.players[user];
+/*
+    //Don't delete the player info, so they still show up on the score list
+    //Just remove them from the current turn order.
+    if (!game.players[user].score)
+    {
+        //Keep the user around if they have a score
+        delete game.players[user];
+    }
+*/
 
     var player = game.turnOrder.indexOf(user);
     game.turnOrder.splice(player, 1);
@@ -659,6 +738,30 @@ function reportHand(botInfo, game, isDelayed){
             "text": 'Your current hand is:',
             "attachments": hand
         }, isDelayed, true);
+}
+
+function reportScores(botInfo, game, isPrivate, isDelayed){
+    if (!game){
+        return;
+    }
+    
+    var currentScores = [];
+    
+    for (var key in Object.keys(game.players)){
+        var player = game.players[key];
+        player.hand = [];
+        currentScores.push({Name: key, Score: player.score ? player.score : 0 });
+    }
+    
+    currentScores.sort(function(a, b){ return b.Score - a.Score; });
+
+    var stringified = '';
+    
+    for(var i = 0; i < currentScores.length; i++){
+        stringified += '\n' + currentScores.Name + ': ' + currentScores.Score;
+    }
+    
+    sendMessage(botInfo, 'Current score:\n' + stringified, isDelayed, isPrivate);
 }
 
 function reportTurnOrder(botInfo, game, isPrivate, isDelayed){
