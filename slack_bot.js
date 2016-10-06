@@ -300,10 +300,11 @@ function drawCard(botInfo, game){
         return;
     }
 
-    drawCards(botInfo, game, playerName, 1)
-        .then(function(){
+    drawCards(botInfo, game, playerName, 1).then(function(){
+            sendMessage(botInfo, playerName + ' has drawn a card.');
+        }).then(function(){
             saveGame(botInfo, game).then(function(){
-                sendMessage(botInfo, 'You now have ' + game.players[playerName].hand.length + ' cards.', false, true);
+                sendMessage(botInfo, 'You now have ' + game.players[playerName].hand.length + ' cards.', true, true);
                 reportHand(botInfo, game, true);
             });
         });
