@@ -565,7 +565,7 @@ function playCard(botInfo, game){
     toPlayValue = toPlayValue.toLowerCase();
 
     toPlayColor = {'b': 'blue', 'y': 'yellow', 'g': 'green', 'r': 'red'}[toPlayColor] || toPlayColor;
-    toPlayValue = {'s': 'skip', 'r': 'reverse', 'draw2': 'draw 2', 'd2': 'draw 2', 'd': 'draw 2'}[toPlayValue] || toPlayValue;
+    toPlayValue = {'s': 'skip', 'r': 'reverse', 'draw2': 'draw 2', 'draw': 'draw 2', 'd2': 'draw 2', 'd': 'draw 2'}[toPlayValue] || toPlayValue;
 
     var player = game.players[playerName];
 
