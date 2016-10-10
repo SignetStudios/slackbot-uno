@@ -110,7 +110,8 @@ controller.hears('^start', ['slash_command'], function(bot, message){
 });
 
 //The following should hear most combinations of cards that can be played
-controller.hears('^play(?: (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?|w(?:ild)?|d(?:raw ?4)?)(?: ?([1-9]|s(?:kip)?|r(?:everse)?|d(?:raw ?2)?))?)?$', ['slash_command'], function(bot, message){
+//TODO: Consider breaking these out into seperate functions for easier debugging
+controller.hears('^play(?: (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?|w(?:ild)?|d(?:raw ?4)?)(?: ?([1-9]|s(?:kip)?|r(?:everse)?|d(?:(?:raw ?)?2?)?))?)?$', ['slash_command'], function(bot, message){
     var botInfo = {bot, message};
     getGame(botInfo).then(function(game){
         playCard(botInfo, game);
