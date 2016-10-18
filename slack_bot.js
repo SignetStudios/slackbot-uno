@@ -1,9 +1,9 @@
 const Slapp = require('slapp');
 const ConvoStore = require('slapp-convo-beepboop');
 const BeepBoopContext = require('slapp-context-beepboop');
+const Express = require('express');
 
-if (!process.env.PORT)
-    throw Error('Missing PORT');
+var port = process.env.PORT || 8080;
 
 var slapp = Slapp({
     convo_store: ConvoStore(),
@@ -891,3 +891,15 @@ function setWildColor(botInfo, game){
     });
 
 }
+
+// attach Slapp to express server
+var server = slapp.attachToExpress(Express())
+
+// start http server
+server.listen(port, (err) => {
+  if (err) {
+    return console.error(err)
+  }
+
+  console.log(`Listening on port ${port}`)
+})
