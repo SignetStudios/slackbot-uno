@@ -1,50 +1,28 @@
-var Botkit = require('botkit'),
-    redis = require('botkit-storage-redis')({
+const Slapp = require('slapp');
+const ConvoStore = require('slapp-convo-beepboop');
+const BeepBoopContext = require('slapp-context-beepboop');
+
+if (!process.env.PORT)
+    throw Error('Missing PORT');
+
+var slapp = Slapp({
+    convo_store: ConvoStore(),
+    context: BeepBoopContext(),
+    log: true,
+    colors: true
+});
+
+var storage = require('botkit-storage-redis')({
         host: process.env.REDIS_HOST,
         port: process.env.REDIS_PORT,
         password: process.env.REDIS_PASSWORD,
         methods: ['hands']
     }),
-    controller = Botkit.slackbot({
-        storage: redis
-    }),
-    TOKEN = process.env.SLACK_TOKEN,
     request = require('request-promise'),
-    Promise = require('bluebird'),
-    PORT = process.env.PORT || 8080,
-    VERIFY_TOKEN = process.env.SLACK_VERIFY_TOKEN;
+    Promise = require('bluebird');
 
-if (TOKEN) {
-  console.log('Starting in single-team mode');
-  controller.spawn({
-    token: TOKEN,
-    retry: Infinity
-  }).startRTM(function (err, bot, payload) {
-    if (err) {
-      throw new Error(err);
-    }
-
-    console.log('Connected to Slack RTM');
-  });
-// Otherwise assume multi-team mode - setup beep boop resourcer connection
-} else {
-  console.log('Starting in Beep Boop multi-team mode');
-  require('beepboop-botkit').start(controller, { debug: true });
-}
-
-Promise.promisifyAll(controller.storage.channels);
-Promise.promisifyAll(controller.storage.users);
-
-controller.setupWebserver(PORT, function (err, webserver) {
-  if (err) {
-    console.error(err);
-    process.exit(1);
-  }
-
-  // Setup our slash command webhook endpoints
-  controller.createWebhookEndpoints(webserver);
-});
-
+Promise.promisifyAll(storage.channels);
+Promise.promisifyAll(storage.users);
 
 //------------Main code begins here-----------------
 
