@@ -548,15 +548,15 @@ function playCard(botInfo, game){
         return;
     }
 
-    if (!/w(ild)?|d(raw ?4)?/i.test(toPlayColor) && !toPlayValue){
+    if (!/^(w(ild)?|d(raw ?4?)?)/i.test(toPlayColor) && !toPlayValue){
         sendMessage(botInfo, 'You must specify the value of the card to be played.', false, true);
         return;
     }
 
-    if (/d(raw ?4)?/i.test(toPlayColor)){
+    if (/^d(raw ?4)?/i.test(toPlayColor)){
         toPlayColor = 'wild';
         toPlayValue = 'draw 4';
-    } else if (/w(ild)?/i.test(toPlayColor)){
+    } else if (/^w(ild)?/i.test(toPlayColor)){
         toPlayColor = 'wild';
         toPlayValue = 'wild';
     }
