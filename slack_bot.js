@@ -162,6 +162,16 @@ function announceTurn(botInfo, game){
     sendMessage(botInfo, 'It is ' + game.turnOrder[0] + '\'s turn.\nType `/uno play [card]`, `/uno draw` or `/uno status` to begin your turn.', true);
 }
 
+function getNewDeck(botInfo, game){
+    console.log('Generating new deck.');
+    return request({
+        uri: 'http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2',
+        json: true
+    }).then(function(result){
+        game.deckId = result.deck_id;
+    });
+}
+
 function beginGame(botInfo, game){
     if (!game){
         return;
@@ -190,12 +200,7 @@ function beginGame(botInfo, game){
 
     sendMessage(botInfo, 'Game has started! Shuffling the deck and dealing the hands.');
 
-    request({
-        uri: 'http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2',
-        json: true
-    }).then(function(result){
-        game.deckId = result.deck_id;
-    }).then(function(){
+    getNewDeck(botInfo, game).then(function(){
         for (var playerName in game.players){
             var drawRequest = drawCards(botInfo, game, playerName, 7);
 
@@ -298,33 +303,50 @@ function drawCards(botInfo, game, playerName, count){
     console.log('Drawing ' + count + ' cards for ' + playerName);
 
     return request({
-        uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=' + count,
+        uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId,
         json: true
-    }).then(function(result){
-        var player = game.players[playerName];
-        var cardCount = result.cards.length;
-
-        console.log('Drew ' + cardCount + ' cards, adding to ' + playerName + ' hand');
-
-        for (var j = 0; j < cardCount; j++){
-            var card = getUnoCard(result.cards[j]);
-            player.hand.push(card);
+    }).catch(function(result){
+        if (!result.success){
+            console.log('Error drawing cards:');
+            console.log(result.error);
+            return getNewDeck(botInfo, game);
         }
-
-        console.log(playerName + ' hand at ' + player.hand.length + ' cards.');
-        console.log(result.remaining + ' cards remaining in the deck.');
-
-        if (result.remaining <= 10){
-            sendMessage(botInfo, 'Less than 10 cards remaining. Reshuffling the deck.', true);
-            request({
-                uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/shuffle/',
-                json: true
-            }).then(function(shuffleResult){
-                sendMessage(botInfo, 'Deck reshuffled.', true);
+    }).then(function(promise){
+        if (promise && promise.then){ //TODO: Improve on this;
+            return promise.then(function(){
+                return drawCards(botInfo, game, playerName, count);
             });
         }
-    }).catch(function(err){
-        console.log(err);
+        
+        return request({
+            uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=' + count,
+            json: true
+        }).then(function(result){
+            var player = game.players[playerName];
+            var cardCount = result.cards.length;
+    
+            console.log('Drew ' + cardCount + ' cards, adding to ' + playerName + ' hand');
+    
+            for (var j = 0; j < cardCount; j++){
+                var card = getUnoCard(result.cards[j]);
+                player.hand.push(card);
+            }
+    
+            console.log(playerName + ' hand at ' + player.hand.length + ' cards.');
+            console.log(result.remaining + ' cards remaining in the deck.');
+    
+            if (result.remaining <= 10){
+                sendMessage(botInfo, 'Less than 10 cards remaining. Reshuffling the deck.', true);
+                request({
+                    uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/shuffle/',
+                    json: true
+                }).then(function(shuffleResult){
+                    sendMessage(botInfo, 'Deck reshuffled.', true);
+                });
+            }
+        }).catch(function(err){
+            console.log(err);
+        });
     });
 }
 
