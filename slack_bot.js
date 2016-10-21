@@ -327,7 +327,7 @@ function drawCards(botInfo, game, playerName, count){
     return request({
         uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId,
         json: true
-    }).then(function(result){
+    }).catch(function(result){
         if (!result.success){
             console.log('Error drawing cards: ' + result.error);
             return getNewDeck(botInfo.game);
