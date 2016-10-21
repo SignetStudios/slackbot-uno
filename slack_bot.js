@@ -334,7 +334,7 @@ function drawCards(botInfo, game, playerName, count){
             return getNewDeck(botInfo, game);
         }
     }).then(function(promise){
-        if (promise){
+        if (promise && promise.then){ //TODO: Improve on this;
             return promise.then(function(){
                 return drawCards(botInfo, game, playerName, count);
             });
