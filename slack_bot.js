@@ -279,8 +279,9 @@ function drawCard(botInfo, game){
         return;
     }
 
+    sendMessage(botInfo, 'Drawing card', false, true);
     drawCards(botInfo, game, playerName, 1).then(function(){
-            sendMessage(botInfo, playerName + ' has drawn a card.');
+            sendMessage(botInfo, playerName + ' has drawn a card.', true);
         }).then(function(){
             saveGame(botInfo, game).then(function(){
                 sendMessage(botInfo, 'You now have ' + game.players[playerName].hand.length + ' cards.', true, true);
