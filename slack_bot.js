@@ -31,13 +31,13 @@ var suitMappings = {'HEARTS': 'red', 'SPADES': 'green', 'CLUBS': 'yellow', 'DIAM
 
 //TODO: Allow for commands via @mentions as well
 
-controller.hears('^new', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
-    var botInfo = {bot, message};
-    getGame(botInfo, true).then(function(game){
-        initializeGame(botInfo, game);
+slapp.command('/uno', '^new$', (msg) => {
+    getGame(msg, true).then(function(game){
+        initializeGame(msg, game);
     });
 });
 
+/*
 //TODO: Remove when done testing (or not)
 controller.hears('^reset thisisthepassword$', ['slash_command'], function(bot, message){
     var botInfo = {bot, message};
@@ -46,7 +46,7 @@ controller.hears('^reset thisisthepassword$', ['slash_command'], function(bot, m
     });
 });
 
-controller.hears('^setup', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
+controller.hears('^setup', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
     var botInfo = {bot, message};
     getGame(botInfo).then(function(game){
         for (var i = 2; i <= 2; i++){
@@ -57,21 +57,21 @@ controller.hears('^setup', ['slash_command'/*, 'direct_mention', 'mention'*/], f
     });
 });
 
-controller.hears('^join', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
+controller.hears('^join', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
     var botInfo = {bot, message};
     getGame(botInfo).then(function(game){
         joinGame(botInfo, game);
     });
 });
 
-controller.hears('^quit', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
+controller.hears('^quit', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
     var botInfo = {bot, message};
     getGame(botInfo).then(function(game){
         quitGame(botInfo, game);
     });
 });
 
-controller.hears('^status', ['slash_command'/*, 'direct_mention', 'mention'*/], function(bot, message){
+controller.hears('^status', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
     var botInfo = {bot, message};
     getGame(botInfo).then(function(game){
         reportHand(botInfo, game);
@@ -141,7 +141,7 @@ controller.hears(['^draw$'], ['interactive_message_callback'], function(bot, mes
         drawCard(botInfo, game);
     });
 });
-
+*/
 
 
 //------- Game code begins here ------------//
@@ -408,15 +408,15 @@ function endTurn(botInfo, game){
     game.turnOrder.push(game.turnOrder.shift());
 }
 
-function getGame(botInfo, suppressNotice, isInteractive){
-    var channel = botInfo.message.channel;
+function getGame(message, suppressNotice, isInteractive){
+    var channel = message.meta.channel_id;
 
-    return controller.storage.channels.getAsync(channel).then(function(game){
+    return storage.channels.getAsync(channel).then(function(game){
         console.log('Game info retrieved for ' + channel);
         
         if (!game || !game.initialized){
             if (!suppressNotice){
-                sendMessage(botInfo, 'There is no game yet.', isInteractive, true);
+                sendMessage(message, 'There is no game yet.', true);
             }
             
             console.log('No game or not initialized');
@@ -426,7 +426,7 @@ function getGame(botInfo, suppressNotice, isInteractive){
         return game;
     }).error(function(err){
         console.log(err);
-        sendMessage(botInfo, 'There was a problem retrieving the game.', isInteractive, true);
+        sendMessage(message, 'There was a problem retrieving the game.', true);
         return undefined;
     });
 }
@@ -455,16 +455,16 @@ function getUnoCard(standardCard){
     };
 }
 
-function initializeGame(botInfo, game){
-    var user = botInfo.message.user_name;
+function initializeGame(message, game){
+    var user = message.body.user_name;
     
     if (game && game.initialized){
-        sendMessage(botInfo, 'There is already an uno game in progress. Type `/uno join` to join the game.', false, true);
+        sendMessage(message, 'There is already an uno game in progress. Type `/uno join` to join the game.', true);
         return;
     }
         
     game = newGame();
-    game.id = botInfo.message.channel;
+    game.id = message.meta.channel_id;
 
     game.initialized = true;
     game.player1 = user;
@@ -473,10 +473,10 @@ function initializeGame(botInfo, game){
     };
     game.turnOrder.push(user);
 
-    sendMessage(botInfo, user + ' has started UNO. Type `/uno join` to join the game.');
+    sendMessage(message, user + ' has started UNO. Type `/uno join` to join the game.');
 
-    saveGame(botInfo, game).then(function(){
-        reportTurnOrder(botInfo, game, false, true);
+    saveGame(game).then(function(){
+        reportTurnOrder(message, game, false);
     });
 
 }
@@ -696,7 +696,7 @@ function quitGame(botInfo, game){
     });
 }
 
-function reportCurrentCard(botInfo, game, isPrivate, isDelayed){
+function reportCurrentCard(message, game, isPrivate){
     if (!game){
         return;
     }
@@ -709,7 +709,7 @@ function reportCurrentCard(botInfo, game, isPrivate, isDelayed){
         }]
     };
 
-    sendMessage(botInfo, msg, isDelayed, isPrivate);
+    sendMessage(message, msg, isPrivate);
 }
 
 function reportHand(botInfo, game, isDelayed){
@@ -770,13 +770,13 @@ function reportScores(botInfo, game, isPrivate, isDelayed){
     sendMessage(botInfo, 'Current score:\n' + stringified, isDelayed, isPrivate);
 }
 
-function reportTurnOrder(botInfo, game, isPrivate, isDelayed){
+function reportTurnOrder(message, game, isPrivate){
     if (!game){
         return;
     }
     
     if (game.started){
-        reportCurrentCard(botInfo, game, isPrivate, isDelayed);
+        reportCurrentCard(message, game, isPrivate);
     }
 
     var currentOrder = '';
@@ -795,7 +795,7 @@ function reportTurnOrder(botInfo, game, isPrivate, isDelayed){
         currentOrder = currentOrder + '\n' + i + '. ' + playerName + cardReport; 
     }
 
-    sendMessage(botInfo, 'Current playing order:\n' + currentOrder, game.started || isDelayed, isPrivate);
+    sendMessage(message, 'Current playing order:\n' + currentOrder, isPrivate);
 }
 
 function resetGame(botInfo, game){
@@ -806,59 +806,22 @@ function resetGame(botInfo, game){
     });
 }
 
-function saveGame(botInfo, game){
+function saveGame(game){
     console.log('Saving game ' + game.id);
     
-    return controller.storage.channels.saveAsync(game).then(function(){
+    return storage.channels.saveAsync(game).then(function(){
         console.log(game.id + ' saved.');
     }).catch(function(err){
         return err;
     });
 }
 
-function sendMessage(botInfo, message, isDelayed, isPrivate){
-    var msg = message;
-    
-    if (botInfo.message.callback_id){
-        if (msg.text){
-            msg.attachments = message.attachments || [];
-            
-            if (msg.attachments.length === 0){
-                msg.attachments.push({
-                    callback_id: botInfo.message.callback_id
-                });
-            } else{
-                msg.attachments.forEach(function(c){
-                    c.callback_id = botInfo.message.callback_id;
-                });
-            }
-        } else {
-            msg = {
-                text: message,
-                attachments: [
-                    {
-                        callback_id: botInfo.message.callback_id
-                    }]
-            };
-        }
-    }
-    
-    if (isDelayed){
-        if (isPrivate){
-            botInfo.bot.replyPrivateDelayed(botInfo.message, msg);
-            return;
-        }
-        
-        botInfo.bot.replyPublicDelayed(botInfo.message, msg);
-        return;
-    }
-    
+function sendMessage(message, text, isPrivate){
     if (isPrivate){
-        botInfo.bot.replyPrivate(botInfo.message, msg);
-        return;
+        message.respond(text);
+    } else{
+        message.say(text);
     }
-    
-    botInfo.bot.replyPublic(botInfo.message, msg);
 }
 
 function setWildColor(botInfo, game){
