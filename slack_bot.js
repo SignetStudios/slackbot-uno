@@ -37,7 +37,26 @@ slapp.command('/uno', '^new$', (msg) => {
     });
 });
 
+slapp.command('/uno', '^play(?: (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?|w(?:ild)?|d(?:raw ?4)?)(?: ?([1-9]|s(?:kip)?|r(?:everse)?|d(?:(?:raw ?)?2?)?))?)?$', (msg, text, color, value) => {
+    getGame(msg).then(function(game){
+        playCard(msg, game, color, value);
+    });
+});
+
+slapp.command('/uno', '^color (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?)', (msg, text, color) => {
+    getGame(msg).then(function(game){
+        setWildColor(msg, game, color);
+    });
+});
+
 /*
+controller.hears('', ['slash_command'], function(bot, message){
+    var botInfo = {bot, message};
+    getGame(botInfo).then(function(game){
+        setWildColor(botInfo, game);
+    });
+});
+
 //TODO: Remove when done testing (or not)
 controller.hears('^reset thisisthepassword$', ['slash_command'], function(bot, message){
     var botInfo = {bot, message};
@@ -89,19 +108,7 @@ controller.hears('^start', ['slash_command'], function(bot, message){
 
 //The following should hear most combinations of cards that can be played
 //TODO: Consider breaking these out into seperate functions for easier debugging
-controller.hears('^play(?: (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?|w(?:ild)?|d(?:raw ?4)?)(?: ?([1-9]|s(?:kip)?|r(?:everse)?|d(?:(?:raw ?)?2?)?))?)?$', ['slash_command'], function(bot, message){
-    var botInfo = {bot, message};
-    getGame(botInfo).then(function(game){
-        playCard(botInfo, game);
-    });
-});
 
-controller.hears('^color (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?)', ['slash_command'], function(bot, message){
-    var botInfo = {bot, message};
-    getGame(botInfo).then(function(game){
-        setWildColor(botInfo, game);
-    });
-});
 
 controller.hears(['^draw'], ['slash_command'], function(bot, message){
     var botInfo = {bot, message};
@@ -146,23 +153,23 @@ controller.hears(['^draw$'], ['interactive_message_callback'], function(bot, mes
 
 //------- Game code begins here ------------//
 
-function announceTurn(botInfo, game){
+function announceTurn(message, game){
     if (!game){
         return;
     }
 
-    sendMessage(botInfo, {
+    sendMessage(message, {
         "text": 'The current up card is:',
         "attachments": [{            
             "color": colorToHex(game.currentCard.color),
             "text": game.currentCard.color + ' ' + game.currentCard.value        
         }]
-    }, true);
+    });
     
-    sendMessage(botInfo, 'It is ' + game.turnOrder[0] + '\'s turn.\nType `/uno play [card]`, `/uno draw` or `/uno status` to begin your turn.', true);
+    sendMessage(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType `/uno play [card]`, `/uno draw` or `/uno status` to begin your turn.');
 }
 
-function getNewDeck(botInfo, game){
+function getNewDeck(game){
     console.log('Generating new deck.');
     return request({
         uri: 'http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2',
@@ -172,37 +179,37 @@ function getNewDeck(botInfo, game){
     });
 }
 
-function beginGame(botInfo, game){
+function beginGame(message, game){
     if (!game){
         return;
     }
 
-    var user = botInfo.message.user_name;
+    var user = message.body.user_name;
 
     if (game.player1 !== user){
-        sendMessage(botInfo, 'Only player 1 (' + game.player1 + ') can start the game.', false, true);
+        sendMessage(message, 'Only player 1 (' + game.player1 + ') can start the game.', true);
         return;
     }
 
     if (Object.keys(game.players).length < 2){
-        sendMessage(botInfo, 'You need at least two players to begin playing.', false, true);
+        sendMessage(message, 'You need at least two players to begin playing.', true);
         return;
     }
 
     if (game.started){
-        sendMessage(botInfo, 'The game is already started.', false, true);
-        reportTurnOrder(botInfo, game, true, true);
+        sendMessage(message, 'The game is already started.', true);
+        reportTurnOrder(message, game, true);
         return;
     }
 
     game.started = true;
     var drawRequests = [];
 
-    sendMessage(botInfo, 'Game has started! Shuffling the deck and dealing the hands.');
+    sendMessage(message, 'Game has started! Shuffling the deck and dealing the hands.');
 
-    getNewDeck(botInfo, game).then(function(){
+    getNewDeck(game).then(function(){
         for (var playerName in game.players){
-            var drawRequest = drawCards(botInfo, game, playerName, 7);
+            var drawRequest = drawCards(message, game, playerName, 7);
 
             drawRequests.push(drawRequest);                    
         }
@@ -219,9 +226,9 @@ function beginGame(botInfo, game){
         drawRequests.push(startingCardRequest);
     }).then(function(){
         Promise.all(drawRequests).then(function(){
-            saveGame(botInfo, game).then(function(){
-                announceTurn(botInfo, game);
-                reportHand(botInfo, game, true);
+            saveGame(game).then(function(){
+                announceTurn(message, game);
+                reportHand(message, game);
             });
         });
     });
@@ -272,30 +279,30 @@ function colorToHex(color){
     }
 }
 
-function drawCard(botInfo, game){
+function drawCard(message, game){
     if (!game){
         return;
     }
 
-    var playerName = botInfo.message.user_name;
+    var playerName = message.body.user_name;
 
     if (!game.started){
-        sendMessage(botInfo, 'The game has not yet started.', false, true);
+        sendMessage(message, 'The game has not yet started.', true);
         return;
     }
 
-    sendMessage(botInfo, 'Drawing card', false, true);
-    drawCards(botInfo, game, playerName, 1).then(function(){
-            sendMessage(botInfo, playerName + ' has drawn a card.', true);
-        }).then(function(){
-            saveGame(botInfo, game).then(function(){
-                sendMessage(botInfo, 'You now have ' + game.players[playerName].hand.length + ' cards.', true, true);
-                reportHand(botInfo, game, true);
-            });
+    sendMessage(message, 'Drawing card', true);
+    drawCards(message, game, playerName, 1).then(function(){
+        sendMessage(message, playerName + ' has drawn a card.');
+    }).then(function(){
+        saveGame(game).then(function(){
+            sendMessage(message, 'You now have ' + game.players[playerName].hand.length + ' cards.', true);
+            reportHand(message, game);
         });
+    });
 }
 
-function drawCards(botInfo, game, playerName, count){
+function drawCards(message, game, playerName, count){
     if (!game){
         return;
     }
@@ -309,12 +316,12 @@ function drawCards(botInfo, game, playerName, count){
         if (!result.success){
             console.log('Error drawing cards:');
             console.log(result.error);
-            return getNewDeck(botInfo, game);
+            return getNewDeck(game);
         }
     }).then(function(promise){
         if (promise && promise.then){ //TODO: Improve on this;
             return promise.then(function(){
-                return drawCards(botInfo, game, playerName, count);
+                return drawCards(message, game, playerName, count);
             });
         }
         
@@ -336,12 +343,12 @@ function drawCards(botInfo, game, playerName, count){
             console.log(result.remaining + ' cards remaining in the deck.');
     
             if (result.remaining <= 10){
-                sendMessage(botInfo, 'Less than 10 cards remaining. Reshuffling the deck.', true);
+                sendMessage(message, 'Less than 10 cards remaining. Reshuffling the deck.');
                 request({
                     uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/shuffle/',
                     json: true
                 }).then(function(shuffleResult){
-                    sendMessage(botInfo, 'Deck reshuffled.', true);
+                    sendMessage(message, 'Deck reshuffled.');
                 });
             }
         }).catch(function(err){
@@ -350,7 +357,7 @@ function drawCards(botInfo, game, playerName, count){
     });
 }
 
-function endGame(botInfo, game){
+function endGame(message, game){
     if (!game){
         return;
     }
@@ -358,10 +365,10 @@ function endGame(botInfo, game){
     var winner = game.turnOrder[0],
         points = calculatePoints(game);
     
-    sendMessage(botInfo, winner + ' played their final card.', true);
-    sendMessage(botInfo, winner + ' has won the hand, and receives ' + points + ' points.', true);
+    sendMessage(message, winner + ' played their final card.');
+    sendMessage(message, winner + ' has won the hand, and receives ' + points + ' points.');
 
-    endTurn(botInfo, game);
+    endTurn(message, game);
     
     game.players[winner].points += points;
     
@@ -375,32 +382,32 @@ function endGame(botInfo, game){
     
     currentScores.sort(function(a, b){ return b.Score - a.Score; });
     
-    reportScores(botInfo, game, false, true);
+    reportScores(message, game);
 
     if (currentScores[0].Score >= 500){
         //Player won the game; reset the game to a 'new' state
         var gameWinner = currentScores[0];
-        sendMessage(botInfo, gameWinner.Name + ' has won the game with ' + gameWinner.Score + ' points!', true);
+        sendMessage(message, gameWinner.Name + ' has won the game with ' + gameWinner.Score + ' points!', true);
         
         game = newGame();
-        game.id = botInfo.message.channel;
+        game.id = message.meta.channel_id;
     } else {
         //Leave the game state, but mark as not started to trigger a new deal
         game.started = false;
         
-        sendMessage(botInfo, game.player1 + ', type `/uno start` to begin a new hand.', true);
+        sendMessage(message, game.player1 + ', type `/uno start` to begin a new hand.', true);
     }
     
-    saveGame(botInfo, game);
+    saveGame(game);
 }
 
-function endTurn(botInfo, game){
+function endTurn(message, game){
     if (!game){
         return;
     }
 
     if (!game.started){
-        sendMessage(botInfo, 'The game has not yet been started.', false, true);
+        sendMessage(message, 'The game has not yet been started.', true);
         return;
     }
 
@@ -481,15 +488,15 @@ function initializeGame(message, game){
 
 }
 
-function joinGame(botInfo, game, userName){
-    var user = userName || botInfo.message.user_name;
+function joinGame(message, game, userName){
+    var user = userName || message.body.user_name;
 
     if (!game){
         return;
     }
 
     if (game.turnOrder.indexOf(user) > 0){
-        sendMessage(botInfo, user + ' has already joined the game!', false, true);
+        sendMessage(message, user + ' has already joined the game!', true);
         return;
     }
 
@@ -503,10 +510,10 @@ function joinGame(botInfo, game, userName){
 
     game.turnOrder.push(user);
 
-    sendMessage(botInfo, user + ' has joined the game.');
+    sendMessage(message, user + ' has joined the game.');
     
-    saveGame(botInfo, game).then(function(){
-        reportTurnOrder(botInfo, game, false, true);
+    saveGame(game).then(function(){
+        reportTurnOrder(message, game, true);
     });
 
 }
@@ -522,59 +529,57 @@ function newGame(){
     };
 }
 
-function playCard(botInfo, game){
-    var playerName = botInfo.message.user_name,
-        toPlayColor = botInfo.message.match[1],
-        toPlayValue = botInfo.message.match[2];
+function playCard(message, game, color, value){
+    var playerName = message.body.user_name;
 
     if (!game){
         return;
     }
 
     if (!game.started){
-        sendMessage(botInfo, 'The game has not yet been started.', false, true);
+        sendMessage(message, 'The game has not yet been started.', true);
         return;
     }
 
     var currentPlayer = game.turnOrder[0];
 
     if (playerName !== currentPlayer){
-        sendMessage(botInfo, 'It is not your turn.', false, true);
+        sendMessage(message, 'It is not your turn.', true);
         return;
     }
 
-    if (!toPlayColor && !toPlayValue){
-        reportHand(botInfo, game);
-        sendMessage(botInfo, 'You can perform the following actions:\n`/uno play [card]`, `/uno draw`, `/uno view`', true, true);
+    if (!color && !value){
+        reportHand(message, game);
+        sendMessage(message, 'You can perform the following actions:\n`/uno play [card]`, `/uno draw`, `/uno view`', true);
         return;
     }
 
-    if (!/^(w(ild)?|d(raw ?4?)?)/i.test(toPlayColor) && !toPlayValue){
-        sendMessage(botInfo, 'You must specify the value of the card to be played.', false, true);
+    if (!/^(w(ild)?|d(raw ?4?)?)/i.test(color) && !value){
+        sendMessage(message, 'You must specify the value of the card to be played.', true);
         return;
     }
 
-    if (/^d(raw ?4)?/i.test(toPlayColor)){
-        toPlayColor = 'wild';
-        toPlayValue = 'draw 4';
-    } else if (/^w(ild)?/i.test(toPlayColor)){
-        toPlayColor = 'wild';
-        toPlayValue = 'wild';
+    if (/^d(raw ?4)?/i.test(color)){
+        color = 'wild';
+        value = 'draw 4';
+    } else if (/^w(ild)?/i.test(color)){
+        color = 'wild';
+        value = 'wild';
     }
 
-    toPlayColor = toPlayColor.toLowerCase();
-    toPlayValue = toPlayValue.toLowerCase();
+    color = color.toLowerCase();
+    value = value.toLowerCase();
 
-    toPlayColor = {'b': 'blue', 'y': 'yellow', 'g': 'green', 'r': 'red'}[toPlayColor] || toPlayColor;
-    toPlayValue = {'s': 'skip', 'r': 'reverse', 'draw2': 'draw 2', 'draw': 'draw 2', 'd2': 'draw 2', 'd': 'draw 2'}[toPlayValue] || toPlayValue;
+    color = {'b': 'blue', 'y': 'yellow', 'g': 'green', 'r': 'red'}[color] || color;
+    value = {'s': 'skip', 'r': 'reverse', 'draw2': 'draw 2', 'draw': 'draw 2', 'd2': 'draw 2', 'd': 'draw 2'}[value] || value;
 
     var player = game.players[playerName];
 
-    var selectedCards = player.hand.filter(function(item){ return item.color === toPlayColor && item.value === toPlayValue; }); 
+    var selectedCards = player.hand.filter(function(item){ return item.color === color && item.value === value; }); 
 
     if (selectedCards.length === 0){
-        console.log(toPlayColor + ' ' + toPlayValue);
-        sendMessage(botInfo, 'You don\'t have a ' + (toPlayColor !== 'wild' ? toPlayColor + ' ' : '') + toPlayValue, false, true);
+        console.log(color + ' ' + value);
+        sendMessage(message, 'You don\'t have a ' + (color !== 'wild' ? color + ' ' : '') + value, true);
         return;
     }
 
@@ -587,7 +592,7 @@ function playCard(botInfo, game){
         (game.currentCard.value === 'wild' ||
         game.currentCard.value === 'draw 4' ||         
         cardToPlay.value !== game.currentCard.value)){
-            sendMessage(botInfo, 'You cannot play a ' + toPlayColor + ' ' + toPlayValue + ' on a ' + game.currentCard.color + ' ' + game.currentCard.value, false, true);
+            sendMessage(message, 'You cannot play a ' + color + ' ' + value + ' on a ' + game.currentCard.color + ' ' + game.currentCard.value, true);
             return;
     }
 
@@ -599,18 +604,19 @@ function playCard(botInfo, game){
     game.currentCard = cardToPlay;
 
     if (cardToPlay.color === 'wild'){
-        saveGame(botInfo, game).then(function(){
-            sendMessage(botInfo, 'Type `/uno color [color]` to specify what the new color should be.', false, true);
+        saveGame(game).then(function(){
+            //TODO: Begin conversation and interactively prompt for color
+            sendMessage(message, 'Type `/uno color [color]` to specify what the new color should be.', true);
         });
         return;
     }
 
-    sendMessage(botInfo, 'playing ' + cardToPlay.color + ' ' + cardToPlay.value, false, true);
+    sendMessage(message, 'playing ' + cardToPlay.color + ' ' + cardToPlay.value, true);
     
     if (player.hand.length === 1){
-        sendMessage(botInfo, playerName + ' only has one card left in their hand!', true);
+        sendMessage(message, playerName + ' only has one card left in their hand!');
     } else if (player.hand.length === 0){
-        endGame(botInfo, game);
+        endGame(message, game);
         return;
     }
 
@@ -618,38 +624,38 @@ function playCard(botInfo, game){
     var asyncs = [];
 
     if (cardToPlay.value === 'skip'){
-        endTurn(botInfo, game);
-        endTurn(botInfo, game);
+        endTurn(message, game);
+        endTurn(message, game);
     } else if (cardToPlay.value === 'reverse'){
         game.turnOrder.reverse();
     } else if (cardToPlay.value === 'draw 2'){
-        endTurn(botInfo, game);
-        asyncs.push(drawCards(botInfo, game, game.turnOrder[0], 2)
+        endTurn(message, game);
+        asyncs.push(drawCards(message, game, game.turnOrder[0], 2)
             .then(function(){
-                endTurn(botInfo, game);
+                endTurn(message, game);
             }));
     } else{
-        endTurn(botInfo, game);
+        endTurn(message, game);
     }
     
     Promise.all(asyncs).then(function(){
-        saveGame(botInfo, game).then(function(){
-            reportHand(botInfo, game, true);
-            sendMessage(botInfo, playerName + ' played a ' + toPlayColor + ' ' + toPlayValue, true);
-            announceTurn(botInfo, game);
+        saveGame(game).then(function(){
+            reportHand(message, game);
+            sendMessage(message, playerName + ' played a ' + color + ' ' + value);
+            announceTurn(message, game);
         });
     });
 }
 
-function quitGame(botInfo, game){
-    var user = botInfo.message.user_name;
+function quitGame(message, game){
+    var user = message.body.user_name;
         
     if (!game){
         return;
     }
 
     if (!game.players[user]){
-        sendMessage(botInfo, 'You weren\'t playing to begin with.', false, true);
+        sendMessage(message, 'You weren\'t playing to begin with.', true);
         return;
     }
 
@@ -666,12 +672,12 @@ function quitGame(botInfo, game){
     var player = game.turnOrder.indexOf(user);
     game.turnOrder.splice(player, 1);
 
-    sendMessage(botInfo, user + ' has left the game.');
+    sendMessage(message, user + ' has left the game.');
 
     if (Object.keys(game.players).length === 0){
         game = newGame();
-        saveGame(botInfo, game).then(function(){
-            sendMessage(botInfo, 'No more players. Ending the game.', true);
+        saveGame(game).then(function(){
+            sendMessage(message, 'No more players. Ending the game.');
         });
         
         return;
@@ -679,20 +685,20 @@ function quitGame(botInfo, game){
 
     if (game.player1 === user){        
         game.player1 = Object.keys(game.players)[0];
-        sendMessage(botInfo, game.player1 + ' is the new player 1.', true);
+        sendMessage(message, game.player1 + ' is the new player 1.');
     }
 
     if (Object.keys(game.players).length === 1){
         game.started = false;
-        saveGame(botInfo, game).then(function(){
-            sendMessage(botInfo, 'Only one player remaining. Waiting for more players.', true);
+        saveGame(game).then(function(){
+            sendMessage(message, 'Only one player remaining. Waiting for more players.');
         });
 
-        return;      
+        return;
     }
 
-    saveGame(botInfo, game).then(function(){
-        reportTurnOrder(botInfo, game, false, true);
+    saveGame(game).then(function(){
+        reportTurnOrder(message, game);
     });
 }
 
@@ -712,16 +718,16 @@ function reportCurrentCard(message, game, isPrivate){
     sendMessage(message, msg, isPrivate);
 }
 
-function reportHand(botInfo, game, isDelayed){
+function reportHand(message, game){
     if (!game){
         return;
     }
 
-    var playerName = botInfo.message.user_name;
+    var playerName = message.body.user_name;
 
 
     if (!game.started){
-        sendMessage(botInfo, 'The game has not yet started.', isDelayed, true);
+        sendMessage(message, 'The game has not yet started.', true);
         return;
     }
 
@@ -737,13 +743,13 @@ function reportHand(botInfo, game, isDelayed){
         });        
     }
 
-    sendMessage(botInfo, {
+    sendMessage(message, {
             "text": 'Your current hand is:',
             "attachments": hand
-        }, isDelayed, true);
+        }, true);
 }
 
-function reportScores(botInfo, game, isPrivate, isDelayed){
+function reportScores(message, game, isPrivate){
     if (!game){
         return;
     }
@@ -767,7 +773,7 @@ function reportScores(botInfo, game, isPrivate, isDelayed){
         stringified += '\n' + currentScores[j].Name + ': ' + currentScores[j].Score;
     }
     
-    sendMessage(botInfo, 'Current score:\n' + stringified, isDelayed, isPrivate);
+    sendMessage(message, 'Current score:\n' + stringified, isPrivate);
 }
 
 function reportTurnOrder(message, game, isPrivate){
@@ -798,11 +804,11 @@ function reportTurnOrder(message, game, isPrivate){
     sendMessage(message, 'Current playing order:\n' + currentOrder, isPrivate);
 }
 
-function resetGame(botInfo, game){
+function resetGame(message, game){
     game = newGame();
-    game.id = botInfo.message.channel;
-    saveGame(botInfo, game).then(function(){
-        sendMessage(botInfo, 'Game for this channel reset.', false, true);
+    game.id = message.meta.channel_id;
+    saveGame(game).then(function(){
+        sendMessage(message, 'Game for this channel reset.', true);
     });
 }
 
@@ -824,68 +830,69 @@ function sendMessage(message, text, isPrivate){
     }
 }
 
-function setWildColor(botInfo, game){
+function setWildColor(message, game, color){
     if (!game){
         return;
     }
 
-    var playerName = botInfo.message.user_name,
-    newColor = botInfo.message.match[1];
+    var playerName = message.body.user_name;
 
     if (!game.started){
-        sendMessage(botInfo, 'The game has not yet been started.', false, true);
+        sendMessage(message, 'The game has not yet been started.', true);
         return;
-    }
-
-    if (game.currentCard.color !== 'wild'){
-        sendMessage(botInfo, 'You have\'t played a wild.', false, true);
     }
 
     var currentPlayer = game.turnOrder[0];
 
     if (playerName !== currentPlayer)
     {
-        sendMessage(botInfo, 'It is not your turn.', false, true);
+        sendMessage(message, 'It is not your turn.', true);
         return;
     }
 
-    newColor = newColor.toLowerCase();
+    if (game.currentCard.color !== 'wild'){
+        sendMessage(message, 'You have\'t played a wild.', true);
+        return;
+    }
+
+
+    color = color.toLowerCase();
     
-    newColor = {'b': 'blue', 'y': 'yellow', 'g': 'green', 'r': 'red'}[newColor] || newColor;
+    color = {'b': 'blue', 'y': 'yellow', 'g': 'green', 'r': 'red'}[color] || color;
 
-    sendMessage(botInfo, 'Setting the color to ' + newColor, false, true);
+    sendMessage(message, 'Setting the color to ' + color, true);
 
-    game.currentCard.color = newColor;
+    game.currentCard.color = color;
 
-    sendMessage(botInfo, playerName + ' played a ' + game.currentCard.value + ' and chose ' + newColor + ' as the new color.', true);
+    sendMessage(message, playerName + ' played a ' + game.currentCard.value + ' and chose ' + message + ' as the new color.');
 
-    endTurn(botInfo, game);
+    endTurn(message, game);
     
     var asyncs = [];
 
     if (game.currentCard.value === 'draw 4'){
-        asyncs.push(drawCards(botInfo, game, game.turnOrder[0], 4).then(function(){
-            endTurn(botInfo, game);
+        asyncs.push(drawCards(message, game, game.turnOrder[0], 4).then(function(){
+            endTurn(message, game);
         }));
     }
     
     Promise.all(asyncs).then(function(){
-        saveGame(botInfo, game).then(function(){
-            reportHand(botInfo, game, true);
-            announceTurn(botInfo, game);
+        saveGame(game).then(function(){
+            reportHand(message, game);
+            announceTurn(message, game);
         });
     });
 
 }
 
 // attach Slapp to express server
-var server = slapp.attachToExpress(Express())
+var server = slapp.attachToExpress(Express());
 
 // start http server
 server.listen(port, (err) => {
   if (err) {
-    return console.error(err)
+    return console.error(err);
   }
 
-  console.log(`Listening on port ${port}`)
+  console.log(`Listening on port ${port}`);
 })
