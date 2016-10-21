@@ -329,7 +329,8 @@ function drawCards(botInfo, game, playerName, count){
         json: true
     }).catch(function(result){
         if (!result.success){
-            console.log('Error drawing cards: ' + result.error);
+            console.log('Error drawing cards:');
+            console.log(result.error);
             return getNewDeck(botInfo, game);
         }
     }).then(function(promise){
