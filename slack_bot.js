@@ -18,89 +18,90 @@ var storage = require('botkit-storage-redis')({
         password: process.env.REDIS_PASSWORD,
         methods: ['hands']
     }),
-    request = require('request-promise'),
     Promise = require('bluebird');
 
 Promise.promisifyAll(storage.channels);
 Promise.promisifyAll(storage.users);
 
-//------------Main code begins here-----------------
+var unoGame = require('./lib/uno.js')({
+        storage: storage
+    });
 
-var suitMappings = {'HEARTS': 'red', 'SPADES': 'green', 'CLUBS': 'yellow', 'DIAMONDS': 'blue'},
-    valueMappings = {'JACK': 'draw 2', 'QUEEN': 'skip', 'KING': 'reverse'};
+
+//------------Main code begins here-----------------
 
 //TODO: Allow for commands via @mentions as well
 
 slapp.command('/uno', '^new$', (msg) => {
-    getGame(msg, true).then(function(game){
-        initializeGame(msg, game);
+    unoGame.getGame(msg, true).then(function(game){
+        unoGame.initializeGame(msg, game);
     });
 });
 
 //The following should hear most combinations of cards that can be played
 //TODO: Consider breaking these out into seperate functions for easier debugging
 slapp.command('/uno', '^play(?: (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?|w(?:ild)?|d(?:raw ?4)?)(?: ?([1-9]|s(?:kip)?|r(?:everse)?|d(?:(?:raw ?)?2?)?))?)?$', (msg, text, color, value) => {
-    getGame(msg).then(function(game){
-        playCard(msg, game, color, value);
+    unoGame.getGame(msg).then(function(game){
+        unoGame.playCard(msg, game, color, value);
     });
 });
 
 slapp.command('/uno', '^color (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?)', (msg, text, color) => {
-    getGame(msg).then(function(game){
-        setWildColor(msg, game, color);
+    unoGame.getGame(msg).then(function(game){
+        unoGame.setWildColor(msg, game, color);
     });
 });
 
 //TODO: Remove when done testing (or not)
 slapp.command('/uno', '^reset thisisthepassword$', (msg) => {
-    getGame(msg, true).then(function(game){
-        resetGame(msg, game);
+    unoGame.getGame(msg, true).then(function(game){
+        unoGame.resetGame(msg, game);
     });
 });
 
 slapp.command('/uno', '^setup', (msg) => {
-    getGame(msg).then(function(game){
+    unoGame.getGame(msg).then(function(game){
         for (var i = 2; i <= 2; i++){
             var mockUser = 'Player' + i;
-            joinGame(msg, game, mockUser);
+            unoGame.joinGame(msg, game, mockUser);
         }
     });
 });
 
 slapp.command('/uno', '^join', (msg) => {
-    getGame(msg).then(function(game){
-        joinGame(msg, game);
+    unoGame.getGame(msg).then(function(game){
+        unoGame.joinGame(msg, game);
     });
 });
 
 slapp.command('/uno', '^quit', (msg) => {
-    getGame(msg).then(function(game){
-        quitGame(msg, game);
+    unoGame.getGame(msg).then(function(game){
+        unoGame.quitGame(msg, game);
     });
 });
 
 slapp.command('/uno', '^status', (m) => {
-    getGame(m).then(function(g){
-        reportHand(m, g);
-        reportTurnOrder(m, g, true);
-        reportScores(m, g, true);
+    unoGame.getGame(m).then(function(g){
+        unoGame.reportHand(m, g);
+        unoGame.reportTurnOrder(m, g, true);
+        unoGame.reportScores(m, g, true);
     });
 });
 
 slapp.command('/uno', '^start', (m) => {
-    getGame(m).then(function(g){
-        beginGame(m, g);
+    unoGame.getGame(m).then(function(g){
+        unoGame.beginGame(m, g);
     });
 });
 
 slapp.command('/uno', '^draw', (m) => {
-    getGame(m).then(function(g){
-        drawCard(m, g);
+    unoGame.getGame(m).then(function(g){
+        unoGame.drawCard(m, g);
     });
 });
 
 slapp.command('/uno', '^pass', (m) => {
-    sendMessage(m, 'I\'m sorry, Dave, I\'m afraid I can\'t let you do that.', true);
+    m.respond('I\'m sorry, Dave, I\'m afraid I can\'t let you do that.');
 });
 
 
@@ -137,6 +138,7 @@ controller.hears(['^draw$'], ['interactive_message_callback'], function(bot, mes
 
 //------- Game code begins here ------------//
 
+/*
 function announceTurn(message, game){
     if (!game){
         return;
@@ -643,15 +645,6 @@ function quitGame(message, game){
         return;
     }
 
-/*
-    //Don't delete the player info, so they still show up on the score list
-    //Just remove them from the current turn order.
-    if (!game.players[user].score)
-    {
-        //Keep the user around if they have a score
-        delete game.players[user];
-    }
-*/
 
     var player = game.turnOrder.indexOf(user);
     game.turnOrder.splice(player, 1);
@@ -868,6 +861,7 @@ function setWildColor(message, game, color){
     });
 
 }
+*/
 
 // attach Slapp to express server
 var server = slapp.attachToExpress(Express());
