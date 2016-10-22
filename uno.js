@@ -1,110 +1,21 @@
 var request = require('request-promise');
 
-module.exports = function(config){
-    config = config || { };
+function unoGame(config){
+    config = config || {};
+    
     if (!config.storage){
-        throw 'No storage defined';
+        throw 'No storage method defined';
     }
     
-    if (!config.suitMappings){
-        config.suitMappings = {'HEARTS': 'red', 'SPADES': 'green', 'CLUBS': 'yellow', 'DIAMONDS': 'blue'};
-    }
+    //TODO: Enforce storage specs
     
-    if (!config.valueMappings){
-        config.valueMappings = {'JACK': 'draw 2', 'QUEEN': 'skip', 'KING': 'reverse'};
-    }
     
-    return uno(config);
-};
-
-function uno(config){
     var storage = config.storage,
-        suitMappings = config.suitMappings,
-        valueMappings = config.valueMappings;
+        suitMappings = config.suitMappings || {'HEARTS': 'red', 'SPADES': 'green', 'CLUBS': 'yellow', 'DIAMONDS': 'blue'},
+        valueMappings = config.valueMappings || {'JACK': 'draw 2', 'QUEEN': 'skip', 'KING': 'reverse'},
+        sendMessage = config.sendMessage || function(message, text, isPrivate){if (isPrivate){ message.respond(text); } else{ message.say(text); }};
         
-    var uno;
-    
-    uno.announceTurn = function(message, game){
-        if (!game){
-            return;
-        }
-    
-        sendMessage(message, {
-            "text": 'The current up card is:',
-            "attachments": [{            
-                "color": colorToHex(game.currentCard.color),
-                "text": game.currentCard.color + ' ' + game.currentCard.value        
-            }]
-        });
         
-        sendMessage(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType `/uno play [card]`, `/uno draw` or `/uno status` to begin your turn.');
-    }
-    
-    function getNewDeck(game){
-        console.log('Generating new deck.');
-        return request({
-            uri: 'http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2',
-            json: true
-        }).then(function(result){
-            game.deckId = result.deck_id;
-        });
-    }
-    
-    uno.beginGame = function(message, game){
-        if (!game){
-            return;
-        }
-    
-        var user = message.body.user_name;
-    
-        if (game.player1 !== user){
-            sendMessage(message, 'Only player 1 (' + game.player1 + ') can start the game.', true);
-            return;
-        }
-    
-        if (Object.keys(game.players).length < 2){
-            sendMessage(message, 'You need at least two players to begin playing.', true);
-            return;
-        }
-    
-        if (game.started){
-            sendMessage(message, 'The game is already started.', true);
-            reportTurnOrder(message, game, true);
-            return;
-        }
-    
-        game.started = true;
-        var drawRequests = [];
-    
-        sendMessage(message, 'Game has started! Shuffling the deck and dealing the hands.');
-    
-        getNewDeck(game).then(function(){
-            for (var playerName in game.players){
-                var drawRequest = drawCards(message, game, playerName, 7);
-    
-                drawRequests.push(drawRequest);                    
-            }
-            
-            //draw the starting card as well
-            var startingCardRequest = request({
-                uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=1',
-                json: true
-            }).then(function(result){            
-                game.currentCard = getUnoCard(result.cards[0]);
-                game.playAnything = game.currentCard.color === 'wild';
-            });
-    
-            drawRequests.push(startingCardRequest);
-        }).then(function(){
-            Promise.all(drawRequests).then(function(){
-                saveGame(game).then(function(){
-                    announceTurn(message, game);
-                    reportHand(message, game);
-                });
-            });
-        });
-    }
-    
     function calculatePoints(game){
         if (!game){
             return 0;
@@ -149,31 +60,8 @@ function uno(config){
             default: return '';
         }
     }
-    
-    function drawCard(message, game){
-        if (!game){
-            return;
-        }
-    
-        var playerName = message.body.user_name;
-    
-        if (!game.started){
-            sendMessage(message, 'The game has not yet started.', true);
-            return;
-        }
-    
-        sendMessage(message, 'Drawing card', true);
-        drawCards(message, game, playerName, 1).then(function(){
-            sendMessage(message, playerName + ' has drawn a card.');
-        }).then(function(){
-            saveGame(game).then(function(){
-                sendMessage(message, 'You now have ' + game.players[playerName].hand.length + ' cards.', true);
-                reportHand(message, game);
-            });
-        });
-    }
-    
-    uno.drawCards = function(message, game, playerName, count){
+
+    function drawCards(message, game, playerName, count){
         if (!game){
             return;
         }
@@ -253,7 +141,7 @@ function uno(config){
         
         currentScores.sort(function(a, b){ return b.Score - a.Score; });
         
-        reportScores(message, game);
+        this.reportScores(message, game);
     
         if (currentScores[0].Score >= 500){
             //Player won the game; reset the game to a 'new' state
@@ -271,7 +159,7 @@ function uno(config){
         
         saveGame(game);
     }
-    
+
     function endTurn(message, game){
         if (!game){
             return;
@@ -285,30 +173,17 @@ function uno(config){
         console.log('Ending turn for ' + game.turnOrder[0]);
         game.turnOrder.push(game.turnOrder.shift());
     }
-    
-    uno.getGame = function(message, suppressNotice, isInteractive){
-        var channel = message.meta.channel_id;
-    
-        return storage.channels.getAsync(channel).then(function(game){
-            console.log('Game info retrieved for ' + channel);
-            
-            if (!game || !game.initialized){
-                if (!suppressNotice){
-                    sendMessage(message, 'There is no game yet.', true);
-                }
-                
-                console.log('No game or not initialized');
-                return undefined;
-            }
-            
-            return game;
-        }).error(function(err){
-            console.log(err);
-            sendMessage(message, 'There was a problem retrieving the game.', true);
-            return undefined;
+
+    function getNewDeck(game){
+        console.log('Generating new deck.');
+        return request({
+            uri: 'http://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=2',
+            json: true
+        }).then(function(result){
+            game.deckId = result.deck_id;
         });
     }
-    
+
     function getUnoCard(standardCard){
         var value = valueMappings[standardCard.value] || (standardCard.value - 1) + '',
             color = suitMappings[standardCard.suit];
@@ -332,8 +207,162 @@ function uno(config){
             value: value
         };
     }
+
+    function newGame(){
+        return {
+            initialized: false,
+            started: false,
+            players: {},
+            deckId: '',
+            turnOrder: [],
+            currentCard: {}
+        };
+    }
     
-    uno.initializeGame = function(message, game){
+    function reportCurrentCard(message, game, isPrivate){
+        if (!game){
+            return;
+        }
+    
+        var msg = {
+            "text": 'The current up card is:',
+            "attachments": [{            
+                "color": colorToHex(game.currentCard.color),
+                "text": game.currentCard.color + ' ' + game.currentCard.value        
+            }]
+        };
+    
+        sendMessage(message, msg, isPrivate);
+    }
+    
+    function saveGame(game){
+        console.log('Saving game ' + game.id);
+        
+        return storage.channels.saveAsync(game).then(function(){
+            console.log(game.id + ' saved.');
+        }).catch(function(err){
+            return err;
+        });
+    }
+    
+    this.announceTurn = function(message, game){
+        if (!game){
+            return;
+        }
+    
+        sendMessage(message, {
+            "text": 'The current up card is:',
+            "attachments": [{            
+                "color": colorToHex(game.currentCard.color),
+                "text": game.currentCard.color + ' ' + game.currentCard.value        
+            }]
+        });
+        
+        sendMessage(message, 'It is ' + game.turnOrder[0] + '\'s turn.\nType `/uno play [card]`, `/uno draw` or `/uno status` to begin your turn.');
+    };
+    
+    this.beginGame = function(message, game){
+        if (!game){
+            return;
+        }
+    
+        var user = message.body.user_name;
+    
+        if (game.player1 !== user){
+            sendMessage(message, 'Only player 1 (' + game.player1 + ') can start the game.', true);
+            return;
+        }
+    
+        if (Object.keys(game.players).length < 2){
+            sendMessage(message, 'You need at least two players to begin playing.', true);
+            return;
+        }
+    
+        if (game.started){
+            sendMessage(message, 'The game is already started.', true);
+            this.reportTurnOrder(message, game, true);
+            return;
+        }
+    
+        game.started = true;
+        var drawRequests = [];
+    
+        sendMessage(message, 'Game has started! Shuffling the deck and dealing the hands.');
+    
+        getNewDeck(game).then(function(){
+            for (var playerName in game.players){
+                var drawRequest = this.drawCards(message, game, playerName, 7);
+    
+                drawRequests.push(drawRequest);                    
+            }
+            
+            //draw the starting card as well
+            var startingCardRequest = request({
+                uri: 'http://deckofcardsapi.com/api/deck/' + game.deckId + '/draw/?count=1',
+                json: true
+            }).then(function(result){            
+                game.currentCard = getUnoCard(result.cards[0]);
+                game.playAnything = game.currentCard.color === 'wild';
+            });
+    
+            drawRequests.push(startingCardRequest);
+        }).then(function(){
+            Promise.all(drawRequests).then(function(){
+                saveGame(game).then(function(){
+                    this.announceTurn(message, game);
+                    this.reportHand(message, game);
+                });
+            });
+        });
+    };
+
+    this.drawCard = function(message, game){
+        if (!game){
+            return;
+        }
+    
+        var playerName = message.body.user_name;
+    
+        if (!game.started){
+            sendMessage(message, 'The game has not yet started.', true);
+            return;
+        }
+    
+        sendMessage(message, 'Drawing card', true);
+        drawCards(message, game, playerName, 1).then(function(){
+            sendMessage(message, playerName + ' has drawn a card.');
+        }).then(function(){
+            saveGame(game).then(function(){
+                sendMessage(message, 'You now have ' + game.players[playerName].hand.length + ' cards.', true);
+                this.reportHand(message, game);
+            });
+        });
+    };
+    
+    this.getGame = function(message, suppressNotice, isInteractive){
+        var channel = message.meta.channel_id;
+    
+        return storage.channels.getAsync(channel).then(function(game){
+            console.log('Game info retrieved for ' + channel);
+            
+            if (!game || !game.initialized){
+                if (!suppressNotice){
+                    sendMessage(message, 'There is no game yet.', true);
+                }
+                
+                console.log('No game or not initialized');
+                return undefined;
+            }
+            
+            return game;
+        }).error(function(err){
+            console.log(err);
+            sendMessage(message, 'There was a problem retrieving the game.', true);
+            return undefined;
+        });
+    };
+    
+    this.initializeGame = function(message, game){
         var user = message.body.user_name;
         
         if (game && game.initialized){
@@ -354,12 +383,12 @@ function uno(config){
         sendMessage(message, user + ' has started UNO. Type `/uno join` to join the game.');
     
         saveGame(game).then(function(){
-            reportTurnOrder(message, game, false);
+            this.reportTurnOrder(message, game, false);
         });
     
-    }
+    };
     
-    uno.joinGame = function(message, game, userName){
+    this.joinGame = function(message, game, userName){
         var user = userName || message.body.user_name;
     
         if (!game){
@@ -384,23 +413,11 @@ function uno(config){
         sendMessage(message, user + ' has joined the game.');
         
         saveGame(game).then(function(){
-            reportTurnOrder(message, game, true);
+            this.reportTurnOrder(message, game, true);
         });
+    };
     
-    }
-    
-    function newGame(){
-        return {
-            initialized: false,
-            started: false,
-            players: {},
-            deckId: '',
-            turnOrder: [],
-            currentCard: {}
-        };
-    }
-    
-    uno.playCard = function(message, game, color, value){
+    this.playCard = function(message, game, color, value){
         var playerName = message.body.user_name;
     
         if (!game){
@@ -420,7 +437,7 @@ function uno(config){
         }
     
         if (!color && !value){
-            reportHand(message, game);
+            this.reportHand(message, game);
             sendMessage(message, 'You can perform the following actions:\n`/uno play [card]`, `/uno draw`, `/uno view`', true);
             return;
         }
@@ -511,14 +528,14 @@ function uno(config){
         
         Promise.all(asyncs).then(function(){
             saveGame(game).then(function(){
-                reportHand(message, game);
+                this.reportHand(message, game);
                 sendMessage(message, playerName + ' played a ' + color + ' ' + value);
-                announceTurn(message, game);
+                this.announceTurn(message, game);
             });
         });
-    }
+    };
     
-    uno.quitGame = function(message, game){
+    this.quitGame = function(message, game){
         var user = message.body.user_name;
             
         if (!game){
@@ -559,27 +576,11 @@ function uno(config){
         }
     
         saveGame(game).then(function(){
-            reportTurnOrder(message, game);
+            this.reportTurnOrder(message, game);
         });
-    }
+    };
     
-    function reportCurrentCard(message, game, isPrivate){
-        if (!game){
-            return;
-        }
-    
-        var msg = {
-            "text": 'The current up card is:',
-            "attachments": [{            
-                "color": colorToHex(game.currentCard.color),
-                "text": game.currentCard.color + ' ' + game.currentCard.value        
-            }]
-        };
-    
-        sendMessage(message, msg, isPrivate);
-    }
-    
-    uno.reportHand = function(message, game){
+    this.reportHand = function(message, game){
         if (!game){
             return;
         }
@@ -608,9 +609,9 @@ function uno(config){
                 "text": 'Your current hand is:',
                 "attachments": hand
             }, true);
-    }
+    };
     
-    uno.reportScores = function(message, game, isPrivate){
+    this.reportScores = function(message, game, isPrivate){
         if (!game){
             return;
         }
@@ -635,9 +636,9 @@ function uno(config){
         }
         
         sendMessage(message, 'Current score:\n' + stringified, isPrivate);
-    }
+    };
     
-    uno.reportTurnOrder = function(message, game, isPrivate){
+    this.reportTurnOrder = function(message, game, isPrivate){
         if (!game){
             return;
         }
@@ -663,35 +664,17 @@ function uno(config){
         }
     
         sendMessage(message, 'Current playing order:\n' + currentOrder, isPrivate);
-    }
+    };
     
-    uno.resetGame = function(message, game){
+    this.resetGame = function(message, game){
         game = newGame();
         game.id = message.meta.channel_id;
         saveGame(game).then(function(){
             sendMessage(message, 'Game for this channel reset.', true);
         });
-    }
+    };
     
-    function saveGame(game){
-        console.log('Saving game ' + game.id);
-        
-        return storage.channels.saveAsync(game).then(function(){
-            console.log(game.id + ' saved.');
-        }).catch(function(err){
-            return err;
-        });
-    }
-    
-    function sendMessage(message, text, isPrivate){
-        if (isPrivate){
-            message.respond(text);
-        } else{
-            message.say(text);
-        }
-    }
-    
-    uno.setWildColor = function(message, game, color){
+    this.setWildColor = function(message, game, color){
         if (!game){
             return;
         }
@@ -739,11 +722,13 @@ function uno(config){
         
         Promise.all(asyncs).then(function(){
             saveGame(game).then(function(){
-                reportHand(message, game);
-                announceTurn(message, game);
+                this.reportHand(message, game);
+                this.announceTurn(message, game);
             });
         });
-    }
+    };
     
-    return uno;
+    return this;
 }
+
+module.exports = unoGame;
