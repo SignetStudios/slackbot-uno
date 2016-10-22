@@ -17,11 +17,14 @@
     "slapp-convo-beepboop": "^1.0.0"
   },
   "devDependencies": {
+    "coveralls": "^2.11.14",
+    "istanbul": "^0.4.5",
     "jasmine-node": "^1.14.5"
   },
   "scripts": {
     "start": "node slack_bot.js",
-    "test": "jasmine-node ./spec/"
+    "test": "jasmine-node ./spec/",
+    "coveralls": "istanbul cover jasmine-node --captureExceptions spec/ && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
   },
   "keywords": [
     "bots",
