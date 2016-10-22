@@ -19,7 +19,8 @@
   "devDependencies": {
     "coveralls": "^2.11.14",
     "istanbul": "^0.4.5",
-    "jasmine-node": "^1.14.5"
+    "jasmine-node": "^1.14.5",
+    "nock": "^8.1.0"
   },
   "scripts": {
     "start": "node slack_bot.js",
