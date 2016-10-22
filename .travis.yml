@@ -1,12 +1,9 @@
 language: node_js
 node_js:
-  - "0.12"
   - "iojs"
-sudo: false
-cache:
-  directories:
-    - node_modules
-notifications:
-  email: false
-env:
-  - TOKEN="token"
+  - "stable"
+script: npm run test
+before_script:
+  - npm install
+after_success:
+  - npm run coveralls

@@ -17,13 +17,15 @@
     "slapp-convo-beepboop": "^1.0.0"
   },
   "devDependencies": {
-    "jscs": "^3.0.7",
-    "mocha": "^3.1.0",
-    "should": "^11.1.0"
+    "coveralls": "^2.11.14",
+    "istanbul": "^0.4.5",
+    "jasmine-node": "^1.14.5",
+    "nock": "^8.1.0"
   },
   "scripts": {
     "start": "node slack_bot.js",
-    "test": "mocha tests/*.js"
+    "test": "jasmine-node ./spec/",
+    "coveralls": "istanbul cover jasmine-node --captureExceptions spec/ && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
   },
   "keywords": [
     "bots",
