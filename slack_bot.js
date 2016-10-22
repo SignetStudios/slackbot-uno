@@ -37,6 +37,8 @@ slapp.command('/uno', '^new$', (msg) => {
     });
 });
 
+//The following should hear most combinations of cards that can be played
+//TODO: Consider breaking these out into seperate functions for easier debugging
 slapp.command('/uno', '^play(?: (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?|w(?:ild)?|d(?:raw ?4)?)(?: ?([1-9]|s(?:kip)?|r(?:everse)?|d(?:(?:raw ?)?2?)?))?)?$', (msg, text, color, value) => {
     getGame(msg).then(function(game){
         playCard(msg, game, color, value);
@@ -49,79 +51,61 @@ slapp.command('/uno', '^color (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?)', (msg
     });
 });
 
-/*
-controller.hears('', ['slash_command'], function(bot, message){
-    var botInfo = {bot, message};
-    getGame(botInfo).then(function(game){
-        setWildColor(botInfo, game);
-    });
-});
-
 //TODO: Remove when done testing (or not)
-controller.hears('^reset thisisthepassword$', ['slash_command'], function(bot, message){
-    var botInfo = {bot, message};
-    getGame(botInfo, true).then(function(game){
-        resetGame(botInfo, game);
+slapp.command('/uno', '^reset thisisthepassword$', (msg) => {
+    getGame(msg, true).then(function(game){
+        resetGame(msg, game);
     });
 });
 
-controller.hears('^setup', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
-    var botInfo = {bot, message};
-    getGame(botInfo).then(function(game){
+slapp.command('/uno', '^setup', (msg) => {
+    getGame(msg).then(function(game){
         for (var i = 2; i <= 2; i++){
             var mockUser = 'Player' + i;
-    
-            joinGame(botInfo, game, mockUser);
+            joinGame(msg, game, mockUser);
         }
     });
 });
 
-controller.hears('^join', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
-    var botInfo = {bot, message};
-    getGame(botInfo).then(function(game){
-        joinGame(botInfo, game);
+slapp.command('/uno', '^join', (msg) => {
+    getGame(msg).then(function(game){
+        joinGame(msg, game);
     });
 });
 
-controller.hears('^quit', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
-    var botInfo = {bot, message};
-    getGame(botInfo).then(function(game){
-        quitGame(botInfo, game);
+slapp.command('/uno', '^quit', (msg) => {
+    getGame(msg).then(function(game){
+        quitGame(msg, game);
     });
 });
 
-controller.hears('^status', ['slash_command', 'direct_mention', 'mention'], function(bot, message){
-    var botInfo = {bot, message};
-    getGame(botInfo).then(function(game){
-        reportHand(botInfo, game);
-        reportTurnOrder(botInfo, game, true, true);
-        reportScores(botInfo, game, true, true);
+slapp.command('/uno', '^status', (m) => {
+    getGame(m).then(function(g){
+        reportHand(m, g);
+        reportTurnOrder(m, g, true);
+        reportScores(m, g, true);
     });
 });
 
-controller.hears('^start', ['slash_command'], function(bot, message){
-    var botInfo = {bot, message};
-    getGame(botInfo).then(function(game){
-        beginGame(botInfo, game);
+slapp.command('/uno', '^start', (m) => {
+    getGame(m).then(function(g){
+        beginGame(m, g);
     });
 });
 
-//The following should hear most combinations of cards that can be played
-//TODO: Consider breaking these out into seperate functions for easier debugging
-
-
-controller.hears(['^draw'], ['slash_command'], function(bot, message){
-    var botInfo = {bot, message};
-    getGame(botInfo).then(function(game){
-        drawCard(botInfo, game);
+slapp.command('/uno', '^draw', (m) => {
+    getGame(m).then(function(g){
+        drawCard(m, g);
     });
 });
 
-controller.hears(['^pass'], ['slash_command'], function(bot, message){
-    var botInfo = {bot, message};
-    sendMessage(botInfo, 'I\'m sorry, I\'m afraid I can\'t do that ' + message.user_name, false, true);
+slapp.command('/uno', '^pass', (m) => {
+    sendMessage(m, 'I\'m sorry, Dave, I\'m afraid I can\'t let you do that.', true);
 });
 
+
+
+/*
 controller.hears(['^test$'], ['slash_command'], function(bot, message){
     bot.replyInteractive(message, {
         text: 'What would you like to do?',
