@@ -8,23 +8,6 @@ var Promise = require('bluebird');
 describe('unoGame', function(){
     beforeEach(function(){
         this.promise = require('bluebird');
-        this.storage = {
-            channels: Promise.promisifyAll({
-                get: jasmine.createSpy('get').andCallFake(function(obj, cb){ cb(); }),
-                save: jasmine.createSpy('save').andCallFake(function(obj, cb){ cb(); })
-            })
-        };
-        this.sendMessage = jasmine.createSpy('sendMessage');
-        this.config = {
-            storage: this.storage,
-            sendMessage: this.sendMessage,
-            Promise: this.promise
-        };
-        
-        this.uno = uno(this.config);
-        this.message = {
-            body: {}
-        };
         this.game = {
             id: 'gameId',
             currentCard:{
@@ -42,6 +25,53 @@ describe('unoGame', function(){
                 }
             }
         };
+        this.savedGame = JSON.parse(JSON.stringify(this.game));
+        var self = this;
+        this.storage = {
+            channels: {
+                get: jasmine.createSpy('get').andCallFake(function(id, cb){ cb('', self.savedGame); }),
+                save: jasmine.createSpy('save').andCallFake(function(obj, cb){ self.savedGame = obj; cb(); })
+            }
+        };
+        
+        Promise.promisifyAll(this.storage.channels);
+        
+        this.sendMessage = jasmine.createSpy('sendMessage');
+        this.config = {
+            storage: this.storage,
+            sendMessage: this.sendMessage,
+            Promise: this.promise
+        };
+        
+        this.uno = uno(this.config);
+        this.message = {
+            body: {},
+            meta: {}
+        };
+    });
+    
+    describe('storage tests', function(){
+        it('gets correctly', function(done){
+            this.game = {id: 'id'};
+            this.savedGame = {id2: 'id2'};
+            var self = this;
+            
+            this.storage.channels.getAsync('').then(function(a){
+                expect(a).toBe(self.savedGame);
+                done();
+            });
+        });
+        
+        it('saves correctly', function(done){
+            this.game = {id: 'id'};
+            this.savedGame = {id2: 'id2'};
+            var self = this;
+            
+            this.storage.channels.saveAsync(this.game).then(function(a){
+                expect(self.savedGame).toBe(self.game);
+                done();
+            });
+        });
     });
     
     describe('announceTurn', function(){
@@ -309,11 +339,88 @@ describe('unoGame', function(){
     });
     
     describe('getGame', function() {
+        it('gets the game state from storage', function(done){
+            //Arrange
+            this.message.meta.channel_id = 'channel';
+            this.savedGame.initialized = true;
+            var self = this;
+
+            //Act
+            this.uno.getGame(this.message).then(function(game){
+                //Assert
+                expect(self.storage.channels.get).toHaveBeenCalledWith('channel', jasmine.any(Function));
+                expect(game).toBe(self.savedGame);
+                done();
+            });
+        });
         
+        it('sends a message and an empty object if the game is not initialized', function(done){
+            //Arrange
+            this.message.meta.channel_id = 'channel';
+            var self = this;
+            
+            //Act
+            this.uno.getGame(this.message).then(function(game){
+                expect(game).not.toBeDefined();
+                expect(self.sendMessage).toHaveBeenCalledWith(self.message, 'There is no game yet.', true);
+                done();
+            });
+        });
+        
+        it('does not send the message if suppressNotice is true', function(done){
+            //Arrange
+            this.message.meta.channel_id = 'channel';
+            var self = this;
+            
+            //Act
+            this.uno.getGame(this.message, true).then(function(game){
+                expect(game).not.toBeDefined();
+                expect(self.sendMessage).not.toHaveBeenCalled();
+                done();
+            });
+        });
     });
     
     describe('initializeGame', function() {
+        it('should report and do nothing if the game is already initialized', function(){
+            this.game.initialized = true;
+            this.savedGame = JSON.parse(JSON.stringify(this.game));
+            
+            
+            this.uno.initializeGame(this.message, this.game);
+            
+            expect(this.sendMessage).toHaveBeenCalledWith(this.message, 'There is already an uno game in progress. Type `/uno join` to join the game.', true);
+            expect(this.game).toEqual(this.savedGame);
+        });
         
+        xit('should create a new game state', function(){
+            this.game.initialized = false;
+            this.message.meta.channel_id = 'channel';
+            
+            this.uno.initializeGame(this.message, this.game);
+            
+            expect(this.game).toEqual({
+                id: 'channel',
+                initialized: true,
+                started: false,
+                players: {},
+                deckId: '',
+                turnOrder: [],
+                currentCard: {}
+            });
+        });
+        
+        it('should set the requesting player to player1', function(){
+            
+        });
+        
+        it('should automatically add the requesting user as a player', function(){
+            
+        });
+        
+        it('should broadcast that a new game has been started', function(){
+            
+        });
     });
     
     describe('joinGame', function() {
