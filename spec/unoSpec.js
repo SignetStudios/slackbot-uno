@@ -237,6 +237,75 @@ describe('unoGame', function(){
     
     describe('drawCard', function(){
         
+        it('should do nothing if there is no game', function(){
+            //Arrange
+            this.originalGame = JSON.parse(JSON.stringify(this.game));
+            
+            //Act
+            this.uno.drawCard(this.message, undefined);
+            
+            //Assert
+            expect(this.sendMessage).not.toHaveBeenCalled();
+            expect(this.game).toEqual(this.originalGame);
+        });
+        
+        it('should send a message and do nothing if the game is not started', function(){
+             //Arrange
+             this.game.started = false;
+
+             this.originalGame = JSON.parse(JSON.stringify(this.game));
+
+             //Act
+             this.uno.drawCard(this.message, this.game);
+             
+             //Assert
+             expect(this.sendMessage).toHaveBeenCalledWith(this.message, 'The game has not yet started.', true);
+             expect(this.game).toEqual(this.originalGame);
+        });
+        
+        it('should send a message and do nothing if the game is not started', function(){
+             //Arrange
+             this.game.started = false;
+
+             this.originalGame = JSON.parse(JSON.stringify(this.game));
+
+             //Act
+             this.uno.drawCard(this.message, this.game);
+             
+             //Assert
+             expect(this.sendMessage).toHaveBeenCalledWith(this.message, 'The game has not yet started.', true);
+             expect(this.game).toEqual(this.originalGame);
+        });
+        
+        it('should increase the hand size of the player by 1', function(done){
+            //Arrange
+            var self = this;
+            this.game.started = true;
+            this.message.body.user_name = 'player1';
+            
+            //Act
+            this.uno.drawCard(this.message, this.game).then(function(){
+                //Assert
+                expect(self.game.players.player1.hand.length).toBe(1);
+                done();
+            });
+        });
+        
+        it('should tell the player their new hand', function(done){
+            //Arrange
+            var self = this;
+            this.game.started = true;
+            this.message.body.user_name = 'player1';
+            spyOn(this.uno, 'reportHand');
+            
+            //Act
+            this.uno.drawCard(this.message, this.game).then(function(){
+                //Assert
+                expect(self.sendMessage).toHaveBeenCalledWith(self.message, 'You now have 1 cards.', true);
+                expect(self.uno.reportHand).toHaveBeenCalledWith(self.message, self.game);
+                done();
+            });
+        });
     });
     
     describe('getGame', function() {
