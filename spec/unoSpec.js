@@ -393,33 +393,40 @@ describe('unoGame', function(){
             expect(this.game).toEqual(this.savedGame);
         });
         
-        xit('should create a new game state', function(){
+        it('should create a new game state', function(done){
             this.game.initialized = false;
             this.message.meta.channel_id = 'channel';
+            this.message.body.user_name = 'player1';
+            var self = this;
             
-            this.uno.initializeGame(this.message, this.game);
-            
-            expect(this.game).toEqual({
-                id: 'channel',
-                initialized: true,
-                started: false,
-                players: {},
-                deckId: '',
-                turnOrder: [],
-                currentCard: {}
+            this.uno.initializeGame(this.message, this.game).then(function(){
+                expect(self.savedGame).toEqual({
+                    id: 'channel',
+                    initialized: true,
+                    started: false,
+                    players: {
+                        player1: {
+                            hand: []
+                        }
+                    },
+                    deckId: '',
+                    turnOrder: [ 'player1' ],
+                    currentCard: {},
+                    player1: 'player1'
+                });
+                
+                done();
             });
         });
         
-        it('should set the requesting player to player1', function(){
-            
-        });
-        
-        it('should automatically add the requesting user as a player', function(){
-            
-        });
-        
         it('should broadcast that a new game has been started', function(){
-            
+            this.game.initialized = false;
+            this.message.meta.channel_id = 'channel';
+            this.message.body.user_name = 'player1';
+
+            this.uno.initializeGame(this.message, this.game);
+
+            expect(this.sendMessage).toHaveBeenCalledWith(this.message, 'player1 has started UNO. Type `/uno join` to join the game.');
         });
     });
     
