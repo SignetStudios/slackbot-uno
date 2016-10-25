@@ -431,11 +431,119 @@ describe('unoGame', function(){
     });
     
     describe('joinGame', function() {
+        it('should do nothing if there is no game', function(){
+            
+        });
         
+        it('should report and do nothing if the player is already in the game', function(){
+            
+        });
+        
+        it('adds the user to the end of the current turn order', function(){
+            
+        });
+        
+        it('reports that the user joined', function(){
+            
+        });
+        
+        it('reports the current turn order', function(){
+            
+        });
     });
     
     describe('playCard', function() {
+        it('does nothing if there is no game', function(){
+            
+        });
+
+        describe('reports and does nothing', function(){
+            beforeEach(function(){
+                this.originalGame = JSON.parse(JSON.stringify(this.game)); 
+            });
+            
+            afterEach(function(){
+                expect(this.originalGame).toEqual(this.game);
+            });
+            
+            it('if the game has not started', function(){
+                
+            });
+            
+            it('if it is not the players turn', function(){
+                
+            });
+            
+            it('if a color and value are not provided', function(){
+                
+            });
+            
+            it('if a non-wild color was provided without a value', function(){
+                
+            });
+            
+            it('if a value was provided without a color', function(){
+                
+            });
+            
+            it('if the player does not have the specified card in their hand', function(){
+                
+            });
+            
+            describe('if the up card', function(){
+                it('is a regular color/value and the selected card is not a wild or the same color or value', function(){
+                    
+                });
+                
+                it('is a color-chosen wild and the selected card is not the same color', function(){
+                    
+                });
+            });
+        });
         
+        it('removes the chosen card from the player hand', function(){
+            
+        });
+        
+        it('prompts the user if the card played is a wild', function(){
+            
+        });
+        
+        it('informs the user of the chosen card', function(){
+            
+        });
+        
+        it('announces if the player only has one card left in their hand', function(){
+            
+        });
+        
+        it('ends the game if the play has no cards left', function(){
+            
+        });
+        
+        it('advances the game another turn if a skip card was played', function(){
+            
+        });
+        
+        it('reverses the play order if a reverse card was played', function(){
+            
+        });
+        
+        it('adds two cards to the next players hand and ends their turn if a draw 2 was played', function(){
+            
+        });
+        
+        it('broadcasts what the player played', function(){
+            
+        });
+        
+        it('reports the players new hand', function(){
+            
+        });
+        
+        it('announces the turn order', function(){
+            
+        });
     });
     
     describe('quitGame', function() {
