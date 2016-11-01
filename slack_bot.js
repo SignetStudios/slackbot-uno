@@ -102,6 +102,12 @@ slapp.command('/uno', '^pass', (m) => {
     m.respond('I\'m sorry, Dave, I\'m afraid I can\'t let you do that.');
 });
 
+slapp.command('/uno', '^addbot (.+?)(?: (.+))?$', (msg, text, aiName, botName) => {
+    unoGame.getGame(msg).then(function(game){
+        unoGame.addAiPlayer(msg, game, aiName, botName); 
+    });
+});
+
 var server = slapp.attachToExpress(Express());
 
 // start http server
