@@ -6,7 +6,7 @@ function basic(){
     
     this.preferredName = "basicAI";
     
-    this.play = function(hand, currentCard, draw, play){
+    this.play = function(hand, currentCard, play, draw){
         console.log(hand);
         console.log(currentCard);
         /*
