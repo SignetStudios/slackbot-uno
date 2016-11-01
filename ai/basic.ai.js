@@ -1,8 +1,10 @@
-var request = require('request-promise');
-var Promise = require('bluebird');
+//var request = require('request-promise');
+//var Promise = require('bluebird');
 
 function basic(){
     this.develop = true;
+    
+    this.preferredName = "basicAI";
     
     this.play = function(hand, game){
         /*
