@@ -46,18 +46,8 @@ slapp.command('/uno', '^play(?: (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?|w(?:i
     });
 });
 
-/*
-slapp.command('/uno', '^color (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?)', (msg, text, color) => {
-    unoGame.getGame(msg).then(function(game){
-        unoGame.setWildColor(msg, game, color);
-    });
-});
-*/
-
-slapp.action('color_selection', 'color', (msg, value) => {
-    unoGame.getGame(msg).then(function(game){
-        unoGame.setWildColor(msg, game, value);
-    });
+slapp.route('colorSelection', (msg, state) => {
+    unoGame.setWildColor(msg, state, msg.body.actions[0].value);
 });
 
 //TODO: Remove when done testing (or not)
