@@ -6,18 +6,22 @@ function basic(){
     
     this.preferredName = "basicAI";
     
-    this.play = function(hand, game){
+    this.play = function(hand, currentCard, draw, play){
+        console.log(hand);
+        console.log(currentCard);
         /*
             Special cards of the same color
-            draw 2
-            skip
-            reverse
+                draw 2
+                skip
+                reverse
             Any card of the same color
             Any card of the same number (preferring the color that is has the most of)
             A Draw 4, choosing the color it has the most of
             A Wild, choosing the color it has the most of
             Draw
         */
+        
+        
     };
     
     return this;
