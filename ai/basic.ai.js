@@ -2,7 +2,7 @@
 //var Promise = require('bluebird');
 
 function basic(){
-    this.develop = true;
+    this.develop = false;
     
     this.preferredName = "basicAI";
     
@@ -23,27 +23,32 @@ function basic(){
         
         //Play card of the same color
         var handColors = hand.filter(function(item){ return item.color === currentCard.color; });
+        var handValues = hand.filter(function(item){ return item.value === currentCard.value; });
+        
+        /*while (handColors.length === 0 && handValues.length === 0){
+            hand = draw();
+        }*/
         
         if (handColors.length > 0){
-            if (handColors.filter(function(i) { return i.value === 'draw 2'; }).length > 0){
+            if (handColors.filter(function(item) { return item.value === 'draw 2'; }).length > 0){
                 play(currentCard.color, 'draw 2');
                 return;
             }
             
-            if (handColors.filter(function(i) { return i.value === 'skip'; }).length > 0){
+            if (handColors.filter(function(item) { return item.value === 'skip'; }).length > 0){
                 play(currentCard.color, 'skip');
                 return;
             }
             
-            if (handColors.filter(function(i) { return i.value === 'reverse'; }).length > 0){
+            if (handColors.filter(function(item) { return item.value === 'reverse'; }).length > 0){
                 play(currentCard.color, 'reverse');
                 return;
             }
             
-            play(currentCard.color, handColors[0]);
+            play(currentCard.color, handColors[0].value);
+            return;
         }
         
-        var handValues = hand.filter(function(item){ return item.value === currentCard.value; });
         
         //play card of the same value, of the color we have the most of
         if (handValues.length > 0){
@@ -53,7 +58,7 @@ function basic(){
             };
             
             for (var i = 0; i < handValues.length; i++){
-                var count = hand.filter(function(i){ return i.color === handValues[i].color }).length;
+                var count = hand.filter(function(item){ return item.color === handValues[i].color }).length;
                 if (count > bestColor.count){
                     bestColor.color = handValues[i].color;
                     bestColor.count = count;
@@ -74,14 +79,14 @@ function basic(){
             };
             
             for (var i = 0; i < hand.length; i++){
-                var count = hand.filter(function(i){ return i.color === hand[i].color }).length;
+                var count = hand.filter(function(item){ return item.color === hand[i].color }).length;
                 if (count > bestColor.count){
                     bestColor.color = hand[i].color;
                     bestColor.count = count;
                 }
             }
             
-            if (handWilds.filter(function(i){ return i.value === 'draw 4'; }).length > 0){
+            if (handWilds.filter(function(item){ return item.value === 'draw 4'; }).length > 0){
                 play(bestColor.color, 'draw 4');
                 return;
             }
