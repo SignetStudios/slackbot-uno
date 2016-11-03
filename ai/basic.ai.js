@@ -14,7 +14,7 @@ function basic(options){
     this.preferredName = "basicAI";
     
     this.play = function(hand, currentCard, play, draw){
-        return draw(this.playerName);
+        //return draw(this.playerName);
         
         if (!tryPlay(hand, currentCard, play)){
             draw(this.playerName);
@@ -22,6 +22,7 @@ function basic(options){
     };
     
     function tryPlay(hand, currentCard, play){
+        //return false;
         console.log(hand);
         console.log(currentCard);
         /*
