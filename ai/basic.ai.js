@@ -1,12 +1,27 @@
 //var request = require('request-promise');
 //var Promise = require('bluebird');
 
-function basic(){
+function basic(options){
+    
+    this.playerName = this.preferredName;
+    
+    if (options && options.playerName){
+        this.playerName = options.playerName;
+    }
+    
     this.develop = false;
     
     this.preferredName = "basicAI";
     
     this.play = function(hand, currentCard, play, draw){
+        return draw(this.playerName);
+        
+        if (!tryPlay(hand, currentCard, play)){
+            draw(this.playerName);
+        }
+    };
+    
+    function tryPlay(hand, currentCard, play){
         console.log(hand);
         console.log(currentCard);
         /*
@@ -31,22 +46,22 @@ function basic(){
         
         if (handColors.length > 0){
             if (handColors.filter(function(item) { return item.value === 'draw 2'; }).length > 0){
-                play(currentCard.color, 'draw 2');
-                return;
+                play(currentCard.color, 'draw 2', this.playerName);
+                return true;
             }
             
             if (handColors.filter(function(item) { return item.value === 'skip'; }).length > 0){
-                play(currentCard.color, 'skip');
-                return;
+                play(currentCard.color, 'skip', this.playerName);
+                return true;
             }
             
             if (handColors.filter(function(item) { return item.value === 'reverse'; }).length > 0){
-                play(currentCard.color, 'reverse');
-                return;
+                play(currentCard.color, 'reverse', this.playerName);
+                return true;
             }
             
-            play(currentCard.color, handColors[0].value);
-            return;
+            play(currentCard.color, handColors[0].value, this.playerName);
+            return true;
         }
         
         
@@ -65,14 +80,14 @@ function basic(){
                 }
             }
             
-            play(bestColor.color, currentCard.value);
-            return;
+            play(bestColor.color, currentCard.value, this.playerName);
+            return true;
         }
         
         var handWilds = hand.filter(function(item){ return item.color === 'wild'; });
         
         //Play wilds
-        if (handWilds > 0){
+        if (handWilds.length > 0){
             var bestColor = {
                 color: '',
                 count: 0
@@ -87,16 +102,17 @@ function basic(){
             }
             
             if (handWilds.filter(function(item){ return item.value === 'draw 4'; }).length > 0){
-                play(bestColor.color, 'draw 4');
-                return;
+                play(bestColor.color, 'draw 4', this.playerName);
+                return true;
             }
             
-            play(bestColor.color, 'draw');
-            return;
+            play(bestColor.color, 'wild', this.playerName);
+            return true;
         }
         
-        draw();
-    };
+        return false;
+        
+    }
     
     return this;
 }
