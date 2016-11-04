@@ -4,6 +4,7 @@
   "description": "",
   "main": "node slack_bot.js",
   "dependencies": {
+    "asyncawait": "^1.0.6",
     "beepboop-botkit": "^1.4.1",
     "beepboop-persist": "^0.1.0",
     "beepboop-slapp-presence-polyfill": "^1.1.1",

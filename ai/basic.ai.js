@@ -17,7 +17,7 @@ function basic(options){
         //return draw(this.playerName);
         
         if (!tryPlay(hand, currentCard, play)){
-            draw(this.playerName);
+            return draw(this.playerName);
         }
     };
     
