@@ -23,8 +23,8 @@
     "nock": "^8.1.0"
   },
   "scripts": {
-    "start": "node slack_bot.js",
-    "test": "jasmine-node ./spec/",
+    "start": "node --harmony slack_bot.js",
+    "test": "node --harmony ./node_modules/jasmine-node/bin/jasmine-node ./spec/",
     "coveralls": "istanbul cover jasmine-node --captureExceptions spec/ && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
   },
   "keywords": [
