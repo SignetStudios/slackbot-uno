@@ -24,8 +24,8 @@
   },
   "scripts": {
     "start": "node --harmony slack_bot.js",
-    "test": "node --harmony ./node_modules/jasmine-node/bin/jasmine-node ./spec/",
-    "coveralls": "istanbul cover jasmine-node --captureExceptions spec/ && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
+    "test": "node --harmony `which jasmine-node` ./spec/",
+    "coveralls": "node --harmony `which istanbul` cover jasmine-node --captureExceptions spec/ && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
   },
   "keywords": [
     "bots",
