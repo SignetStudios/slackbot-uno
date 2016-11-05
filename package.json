@@ -2,7 +2,7 @@
   "name": "slackbot-uno",
   "version": "0.0.1",
   "description": "",
-  "main": "node slack_bot.js",
+  "main": "node --harmony slack_bot.js",
   "dependencies": {
     "beepboop-botkit": "^1.4.1",
     "beepboop-persist": "^0.1.0",
@@ -18,14 +18,14 @@
   },
   "devDependencies": {
     "coveralls": "^2.11.14",
-    "istanbul": "^0.4.5",
+    "istanbul-harmony": "^0.3.16",
     "jasmine-node": "^1.14.5",
     "nock": "^8.1.0"
   },
   "scripts": {
-    "start": "node slack_bot.js",
-    "test": "jasmine-node ./spec/",
-    "coveralls": "istanbul cover jasmine-node --captureExceptions spec/ && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
+    "start": "node --harmony slack_bot.js",
+    "test": "node --harmony `which jasmine-node` ./spec/",
+    "coveralls": "node --harmony ./node_modules/istanbul-harmony/lib/cli.js cover `which jasmine-node` --captureExceptions spec/ && cat ./coverage/lcov.info | `which coveralls` && rm -rf ./coverage"
   },
   "keywords": [
     "bots",
