@@ -15,6 +15,7 @@ describe('unoGame', function(){
                 value: '8'
             },
             turnOrder: ['player1', 'player2'],
+            nextGame: [],
             player1: 'player1',
             players: {
                 player1: {
@@ -437,6 +438,7 @@ describe('unoGame', function(){
                 },
                 deckId: '',
                 turnOrder: [ 'player1' ],
+                nextGame: [],
                 currentCard: {},
                 player1: 'player1'
             });
