@@ -98,6 +98,16 @@ slapp.command('/uno', '^addbot (.+?)(?: (.+))?$', async function(msg, text, aiNa
     unoGame.addAiPlayer(msg, game, aiName, botName);
 });
 
+slapp.command('/uno', '^removebot (.+)$', async function(msg, text, botName) {
+    var game = await unoGame.getGame(msg);
+    unoGame.quitGame(msg, game, botName);
+});
+
+slapp.command('/uno', '^renamebot (.+?) (.+?)', async function(msg, text, botName, newName) {
+    var game = await unoGame.getGame(msg);
+    unoGame.renameAiPlayer(msg, game, botName, newName);
+});
+
 var server = slapp.attachToExpress(Express());
 
 // start http server
