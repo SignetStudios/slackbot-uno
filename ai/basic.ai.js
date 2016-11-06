@@ -74,9 +74,6 @@ function basic(options){
             };
 
             for (var i = 0; i < handValues.length; i++){
-                if (hand[i].color === 'wild'){
-                    continue;
-                }
                 var count = hand.filter(function(item){ return item.color === handValues[i].color }).length;
                 if (count > bestColor.count){
                     bestColor.color = handValues[i].color;
