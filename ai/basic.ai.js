@@ -40,6 +40,7 @@ function basic(options){
         //Play card of the same color
         var handColors = hand.filter(function(item){ return item.color === currentCard.color; });
         var handValues = hand.filter(function(item){ return item.value === currentCard.value; });
+        var handWilds  = hand.filter(function(item){ return item.color === 'wild'; });
 
         /*while (handColors.length === 0 && handValues.length === 0){
             hand = draw();
@@ -67,7 +68,7 @@ function basic(options){
 
 
         //play card of the same value, of the color we have the most of
-        if (handValues.length > 0){
+        if (currentCard.value !== 'wild' && currentCard.value !== 'draw 4' && handValues.length > 0){
             var bestColor = {
                 color: '',
                 count: 0
@@ -84,8 +85,6 @@ function basic(options){
             await play(bestColor.color, currentCard.value, this.playerName);
             return true;
         }
-
-        var handWilds = hand.filter(function(item){ return item.color === 'wild'; });
 
         //Play wilds
         if (handWilds.length > 0){
