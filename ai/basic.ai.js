@@ -89,18 +89,17 @@ function basic(options){
 
         //Play wilds
         if (handWilds.length > 0){
+            var colors = ['red', 'blue', 'green', 'yellow'];
+
             var bestColor = {
-                color: '',
+                color: colors[Math.floor(Math.random() * colors.length)], //Randomly choose a color, in case this is the last card to be played.
                 count: 0
             };
 
-            for (var i = 0; i < hand.length; i++){
-                if (hand[i].color === 'wild'){
-                    continue;
-                }
-                var count = hand.filter(function(item){ return item.color === hand[i].color }).length;
+            for (var i = 0; i < 4; i++){
+                var count = hand.filter(function(item){ return item.color == colors[i]; }).length;
                 if (count > bestColor.count){
-                    bestColor.color = hand[i].color;
+                    bestColor.color = colors[i];
                     bestColor.count = count;
                 }
             }
@@ -115,8 +114,7 @@ function basic(options){
         }
 
         return false;
-
-    }
+    };
 
     return this;
 }
