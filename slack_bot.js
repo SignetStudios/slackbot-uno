@@ -54,6 +54,24 @@ slapp.route('colorSelection', (msg, state) => {
     unoGame.setWildColor(msg, state, msg.body.actions[0].value);
 });
 
+slapp.action('playCard', 'play', async function(msg, text) {
+    var game = await unoGame.getGame(msg);
+    var selected = text.split(' ');
+    unoGame.playCard(msg, game, selected[0].toLowerCase(), selected[1].toLowerCase());
+});
+
+slapp.action('other', 'draw', async function(msg, text){
+    var game = await unoGame.getGame(msg);
+    unoGame.drawCard(msg, game);
+});
+
+slapp.action('other', 'status', async function(m, text){
+    var g = await unoGame.getGame(m);
+    await unoGame.reportHand(m, g);
+    await unoGame.reportTurnOrder(m, g, true);
+    await unoGame.reportScores(m, g, true);
+});
+
 //TODO: Remove when done testing (or not)
 slapp.command('/uno', '^reset thisisthepassword$', async function(msg) {
     var game = await unoGame.getGame(msg, true);
