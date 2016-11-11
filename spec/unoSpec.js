@@ -1,11 +1,13 @@
 /* global expect */
 /* global spyOn */
 /* global jasmine */
+
 var uno = require('../lib/uno.js');
 var nock = require('nock');
 var Promise = require('bluebird');
 
 describe('unoGame', function(){
+
     beforeEach(function(){
         this.promise = require('bluebird');
         this.game = {
@@ -52,6 +54,7 @@ describe('unoGame', function(){
             meta: {}
         };
     });
+
 
     describe('storage tests', function(){
         it('gets correctly', async function(done){
