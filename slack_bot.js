@@ -72,6 +72,10 @@ slapp.action('other', 'status', async function(m, text){
     await unoGame.reportScores(m, g, true);
 });
 
+slapp.action('other', 'dismiss', (m, t) => {
+    //Do nothing
+});
+
 //TODO: Remove when done testing (or not)
 slapp.command('/uno', '^reset thisisthepassword$', async function(msg) {
     var game = await unoGame.getGame(msg, true);
