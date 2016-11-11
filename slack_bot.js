@@ -32,6 +32,12 @@ var unoGame = require('./lib/uno.js')({
 
 //TODO: Allow for commands via @mentions as well
 
+slapp.command('/uno', async function(msg) {
+    //generic entrypoint
+    var game = await unoGame.getGame(msg, true);
+    unoGame.beginTurnInteractive(msg, game);
+});
+
 slapp.command('/uno', '^new$', async function(msg) {
     var game = await unoGame.getGame(msg, true);
     unoGame.initializeGame(msg, game);
