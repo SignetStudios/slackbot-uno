@@ -57,7 +57,7 @@ slapp.route('colorSelection', (msg, state) => {
 slapp.action('playCard', 'play', async function(msg, text) {
     var game = await unoGame.getGame(msg);
     var selected = text.split(' ');
-    unoGame.playCard(msg, game, selected[0].toLowerCase(), selected[1].toLowerCase());
+    unoGame.playCard(msg, game, selected[0].toLowerCase(), selected[1]);
 });
 
 slapp.action('other', 'draw', async function(msg, text){
