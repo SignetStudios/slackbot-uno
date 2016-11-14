@@ -50,7 +50,12 @@ describe('unoGame', function(){
 
         this.uno = uno(this.config);
         this.message = {
-            body: {},
+            body: {
+                user_name: 'username',
+                use: {
+                    name: 'username'
+                }
+            },
             meta: {}
         };
     });
@@ -305,17 +310,17 @@ describe('unoGame', function(){
         });
 
         it('should send a message and do nothing if the game is not started', async function(done){
-             //Arrange
-             this.game.started = false;
+            //Arrange
+            this.game.started = false;
 
-             this.originalGame = JSON.parse(JSON.stringify(this.game));
+            this.originalGame = JSON.parse(JSON.stringify(this.game));
 
-             //Act
-             await this.uno.drawCard(this.message, this.game);
+            //Act
+            await this.uno.drawCard(this.message, this.game);
 
-             //Assert
-             expect(this.sendMessage).toHaveBeenCalledWith(this.message, 'The game has not yet started.', true);
-             expect(this.game).toEqual(this.originalGame);
+            //Assert
+            expect(this.sendMessage).toHaveBeenCalledWith(this.message, 'The game has not yet started.', true);
+            expect(this.game).toEqual(this.originalGame);
             done();
         });
 
@@ -345,22 +350,6 @@ describe('unoGame', function(){
 
             //Assert
             expect(self.game.players.player1.hand.length).toBe(1);
-            done();
-        });
-
-        it('should tell the player their new hand', async function(done){
-            //Arrange
-            var self = this;
-            this.game.started = true;
-            this.message.body.user_name = 'player1';
-            spyOn(this.uno, 'reportHand');
-
-            //Act
-            await this.uno.drawCard(this.message, this.game);
-
-            //Assert
-            expect(self.sendMessage).toHaveBeenCalledWith(self.message, 'You now have 1 cards.', true);
-            expect(self.uno.reportHand).toHaveBeenCalledWith(self.message, self.game);
             done();
         });
     });
