@@ -12,6 +12,8 @@ var slapp = Slapp({
     colors: true
 });
 
+require('beepboop-slapp-presence-polyfill')(slapp);
+
 var storage = require('botkit-storage-redis')({
         host: process.env.REDIS_HOST,
         port: process.env.REDIS_PORT,
