@@ -6,7 +6,6 @@
   "dependencies": {
     "beepboop-botkit": "^1.4.1",
     "beepboop-persist": "^0.1.0",
-    "beepboop-slapp-presence-polyfill": "^1.1.1",
     "bluebird": "^3.4.6",
     "botkit-storage-redis": "^1.0.1",
     "express": "^4.14.0",
