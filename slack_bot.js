@@ -75,7 +75,10 @@ slapp.action('other', 'status', async function(m, text){
 });
 
 slapp.action('other', 'dismiss', (m, t) => {
-    //Do nothing
+    m.respond({
+        text: '',
+        delete_original: true
+    });
 });
 
 //TODO: Remove when done testing (or not)
