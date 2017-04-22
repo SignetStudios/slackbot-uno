@@ -126,6 +126,10 @@ slapp.command('/uno', '^draw', async function(m) {
     unoGame.drawCard(m, g);
 });
 
+slapp.command('/uno', '^help', async function(m){
+    unoGame.reportHelp(m);
+});
+
 slapp.command('/uno', '^pass', (m) => {
     m.respond('I\'m sorry, Dave, I\'m afraid I can\'t let you do that.');
 });
