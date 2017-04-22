@@ -50,6 +50,11 @@ slapp.command('/uno', '^play(?: (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?|w(?:i
     unoGame.playCard(msg, game, color, value);
 });
 
+slapp.command('/uno', '^color (r(?:ed)?|y(?:ellow)?|g(?:reen)?|b(?:lue)?)', async function(msg, text, color) {
+    var game = await unoGame.getGame(msg);
+    unoGame.setWildColor(msg, game, color);
+});
+
 slapp.route('colorSelection', (msg, state) => {
     unoGame.setWildColor(msg, state, msg.body.actions[0].value);
 });
