@@ -2,6 +2,7 @@
 /* global spyOn */
 /* global jasmine */
 
+/*
 var uno = require('../lib/uno.js');
 var nock = require('nock');
 var Promise = require('bluebird');
@@ -590,3 +591,4 @@ describe('unoGame', function(){
     });
 
 });
+*/
