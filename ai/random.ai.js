@@ -40,7 +40,7 @@ function randomAi(options){
 
             if (possibleCard.color === 'wild'){
                 var colors = ['red', 'blue', 'green', 'yellow'];
-                var color = colors[Math.floor(Math.random() * colors.length)], //Randomly choose a color                            
+                var color = colors[Math.floor(Math.random() * colors.length)]; //Randomly choose a color                            
 
                 await play(color, possibleCard.value, this.playerName);
                 return true;
