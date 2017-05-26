@@ -1,7 +1,7 @@
 //var request = require('request-promise');
 //var Promise = require('bluebird');
 
-function random(options){
+function randomAi(options){
 
     this.playerName = this.preferredName;
 
@@ -58,4 +58,4 @@ function random(options){
     return this;
 }
 
-module.exports = random;
+module.exports = randomAi;
