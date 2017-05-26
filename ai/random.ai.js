@@ -58,4 +58,4 @@ function random(options){
     return this;
 }
 
-module.exports = basic;
+module.exports = random;
