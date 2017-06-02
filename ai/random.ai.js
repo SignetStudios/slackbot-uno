@@ -38,6 +38,13 @@ function randomAi(options){
         for (var i = 0; i < hand.length; i++){
             var possibleCard = hand[i];
 
+            //special case if the card up is wild
+            //should only happen if the AI is first and the initial card is a wild
+            if (currentCard.color === 'wild') {
+                await play(possibleCard.color, possibleCard.value, this.playerName);
+                return true;
+            }
+            
             if (possibleCard.color === 'wild'){
                 var colors = ['red', 'blue', 'green', 'yellow'];
                 var color = colors[Math.floor(Math.random() * colors.length)]; //Randomly choose a color                            
