@@ -1,10 +1,9 @@
-/* global expect */
-/* global spyOn */
-/* global jasmine */
+require('tap').mochaGlobals();
 
 var uno = require('../lib/uno.js');
 var nock = require('nock');
 var Promise = require('bluebird');
+var expect = require('expect');
 
 describe('unoGame', function(){
 
@@ -34,14 +33,14 @@ describe('unoGame', function(){
         var self = this;
         this.storage = {
             channels: {
-                get: jasmine.createSpy('get').andCallFake(function(id, cb){ cb('', self.savedGame); }),
-                save: jasmine.createSpy('save').andCallFake(function(obj, cb){ self.savedGame = obj; cb(); })
+                get: expect.createSpy().andCall(function(id, cb){ cb('', self.savedGame); }),
+                save: expect.createSpy().andCall(function(obj, cb){ self.savedGame = obj; cb(); })
             }
         };
 
         Promise.promisifyAll(this.storage.channels);
 
-        this.sendMessage = jasmine.createSpy('sendMessage');
+        this.sendMessage = expect.createSpy();
         this.config = {
             storage: this.storage,
             sendMessage: this.sendMessage,
@@ -91,7 +90,7 @@ describe('unoGame', function(){
             await this.uno.announceTurn(this.message, undefined);
 
             //Assert
-            expect(this.sendMessage).not.toHaveBeenCalled();
+            expect(this.sendMessage).toNotHaveBeenCalled();
             done();
         });
 
@@ -121,7 +120,10 @@ describe('unoGame', function(){
 
             //Assert
             expect(this.sendMessage.calls.length).toBeGreaterThan(0);
-            expect(this.sendMessage).toHaveBeenCalledWith(this.message, 'It is player1\'s turn.\nType `/uno play [card]`, `/uno draw` or `/uno status` to begin your turn.');
+            expect(this.sendMessage).toHaveBeenCalledWith(this.message, {
+                text: 'It is @player1 \'s turn.\nType `/uno` to begin your turn or `/uno status` at any time to get the state of the game.',
+                link_names: true
+            });
             done();
         });
     });
@@ -145,7 +147,7 @@ describe('unoGame', function(){
             await this.uno.beginGame(this.message, undefined);
 
             //Assert
-            expect(this.sendMessage).not.toHaveBeenCalled();
+            expect(this.sendMessage).toNotHaveBeenCalled();
             expect(this.game).toEqual(this.originalGame);
             done();
         });
@@ -182,7 +184,7 @@ describe('unoGame', function(){
 
         it('should send a message and do nothing if the game is already started', async function(done){
             //Arrange
-            spyOn(this.uno, 'reportTurnOrder');
+            expect.spyOn(this.uno, 'reportTurnOrder');
             this.game.started = true;
 
             this.originalGame = JSON.parse(JSON.stringify(this.game));
@@ -199,7 +201,7 @@ describe('unoGame', function(){
 
         it('should report the current turn order if the game is already started', async function(done){
             //Arrange
-            spyOn(this.uno, 'reportTurnOrder');
+            expect.spyOn(this.uno, 'reportTurnOrder');
             this.game.started = true;
 
             this.originalGame = JSON.parse(JSON.stringify(this.game));
@@ -220,7 +222,7 @@ describe('unoGame', function(){
 
 
             //Act
-            await this.uno.beginGame(this.message, this.game).then(done());
+            await this.uno.beginGame(this.message, this.game);
 
             //Assert
             expect(this.game.started).toEqual(true);
@@ -233,7 +235,7 @@ describe('unoGame', function(){
 
 
             //Act
-            await this.uno.beginGame(this.message, this.game).then(done());
+            await this.uno.beginGame(this.message, this.game);
 
             //Assert
             expect(this.sendMessage).toHaveBeenCalledWith(this.message, 'Game has started! Shuffling the deck and dealing the hands.');
@@ -258,7 +260,7 @@ describe('unoGame', function(){
         it('announces the turn information', async function(done){
             //Arrange
             this.message.body.user_name = 'player1';
-            spyOn(this.uno, 'announceTurn');
+            expect.spyOn(this.uno, 'announceTurn');
             var self = this;
 
             //Act
@@ -272,7 +274,7 @@ describe('unoGame', function(){
         it('tells player1 their hand', async function(done){
             //Arrange
             this.message.body.user_name = 'player1';
-            spyOn(this.uno, 'reportHand');
+            expect.spyOn(this.uno, 'reportHand');
             var self = this;
 
             //Act
@@ -283,6 +285,7 @@ describe('unoGame', function(){
             done();
         });
     });
+
 
     describe('drawCard', function(){
         beforeEach(function(){
@@ -304,7 +307,7 @@ describe('unoGame', function(){
             await this.uno.drawCard(this.message, undefined);
 
             //Assert
-            expect(this.sendMessage).not.toHaveBeenCalled();
+            expect(this.sendMessage).toNotHaveBeenCalled();
             expect(this.game).toEqual(this.originalGame);
             done();
         });
@@ -365,7 +368,8 @@ describe('unoGame', function(){
             var game = await this.uno.getGame(this.message);
 
             //Assert
-            expect(self.storage.channels.get).toHaveBeenCalledWith('channel', jasmine.any(Function));
+            expect(self.storage.channels.get).toHaveBeenCalled();
+            expect(self.storage.channels.get.calls[0].arguments[0]).toBe('channel');
             expect(game).toBe(self.savedGame);
             done();
         });
@@ -378,7 +382,7 @@ describe('unoGame', function(){
             //Act
             var game = await this.uno.getGame(this.message);
 
-            expect(game).not.toBeDefined();
+            expect(game).toNotExist();
             expect(self.sendMessage).toHaveBeenCalledWith(self.message, 'There is no game yet.', true);
             done();
         });
@@ -391,8 +395,8 @@ describe('unoGame', function(){
             //Act
             var game = await this.uno.getGame(this.message, true);
 
-            expect(game).not.toBeDefined();
-            expect(self.sendMessage).not.toHaveBeenCalled();
+            expect(game).toNotExist();
+            expect(self.sendMessage).toNotHaveBeenCalled();
             done();
         });
     });
@@ -588,5 +592,4 @@ describe('unoGame', function(){
     describe('setWildColor', function() {
 
     });
-
 });

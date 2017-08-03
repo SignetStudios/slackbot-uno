@@ -5,3 +5,5 @@ db/
 .DS_Store
 */.DS_Store
 .env
+
+\.nyc_output/
