@@ -121,7 +121,7 @@ describe('unoGame', function(){
             //Assert
             expect(this.sendMessage.calls.length).toBeGreaterThan(0);
             expect(this.sendMessage).toHaveBeenCalledWith(this.message, {
-                text: 'It is @player1 \'s turn.\nType `/uno` to begin your turn or `/uno status` at any time to get the state of the game.',
+                text: 'It is @player1 \'s turn.\nType `/uno` to begin your turn.',
                 link_names: true
             });
             done();
