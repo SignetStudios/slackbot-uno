@@ -30,6 +30,9 @@
     "slack",
     "uno"
   ],
+  "engines": {
+    "node": "7.10.0"
+  }
   "license": "MIT",
   "repository": "git+https://github.com/SignetStudios/slackbot-uno"
 }
