@@ -217,6 +217,7 @@ packages:
     dev: false
     engines:
       node: '>=0.4.0'
+    hasBin: true
     resolution:
       integrity: sha1-EFSVrlNh1pe9GVyCUZLhrX8lN4c=
   /ajv/5.5.2:
@@ -566,6 +567,7 @@ packages:
       integrity: sha1-DQcLTQQ6W+ozovGkDi7bPZpMz3c=
   /color-support/1.1.3:
     dev: true
+    hasBin: true
     resolution:
       integrity: sha512-qiBjkpbMLO/HL68y+lh4q0/O1MZFj2RX6X/KmMa3+gJD3z+WwI1ZzDHysvqHGS3mP6mznPckpXmw1nI9cJjyRg==
   /colour/0.7.1:
@@ -658,6 +660,7 @@ packages:
     dev: true
     engines:
       node: '>=0.8.6'
+    hasBin: true
     resolution:
       integrity: sha512-iiAmn+l1XqRwNLXhW8Rs5qHZRFMYp9ZIPjEOVRpC/c4so6Y/f4/lFi0FfR5B9cCqgyhkJ5cZmbvcVRfP8MHchw==
   /create-error-class/3.0.2:
@@ -889,12 +892,14 @@ packages:
     dev: true
     engines:
       node: '>=0.10.0'
+    hasBin: true
     resolution:
       integrity: sha1-luO3DVd59q1JzQMmc9HDEnZ7pYE=
   /esprima/4.0.0:
     dev: true
     engines:
       node: '>=4'
+    hasBin: true
     resolution:
       integrity: sha512-oftTcaMu/EGrEIu904mWteKIv8vMuOgGYo7EhVJJN00R/EED9DCua/xxHRdYnKtcECzVg7xOWhflvJMnqcFZjw==
   /espurify/1.7.0:
@@ -1139,6 +1144,7 @@ packages:
       stream-events: 1.0.2
       through2: 2.0.3
     dev: false
+    hasBin: true
     resolution:
       integrity: sha512-+Zrmr0JKO2y/2mg953TW6JLu+NAMHqQsKzqCm7CIT24gMQakolPJCMzDleVpVjXAqB7ZCD276tcUq2ebOfqTug==
   /generate-function/2.0.0:
@@ -1226,6 +1232,7 @@ packages:
       node-forge: 0.7.2
       pify: 3.0.0
     dev: false
+    hasBin: true
     resolution:
       integrity: sha512-tqu8IJF307iH8vXQEI5ZhuIk89vAf25rmoyoenckm/zY7Elzm4X/x6OPOk4wa3sRzkA/Y2CkubpvLxSEgIEQcg==
   /google-proto-files/0.14.2:
@@ -1256,6 +1263,7 @@ packages:
     dev: false
     engines:
       node: '>=4'
+    requiresBuild: true
     resolution:
       integrity: sha512-7zXQJlDXMr/ZaDqdaIchgclViyoWo8GQxZSmFUAxR8GwSr28b6/BTgF221WG+2W693jpp74XJ/+I9DcPXsgt9Q==
   /gtoken/2.1.0:
@@ -1283,6 +1291,7 @@ packages:
     dev: true
     engines:
       node: '>=0.10'
+    hasBin: true
     resolution:
       integrity: sha1-zcvAgYgmWtEZtqWnyKtw7s+10n0=
   /har-validator/5.0.3:
@@ -1587,6 +1596,7 @@ packages:
       argparse: 1.0.10
       esprima: 4.0.0
     dev: true
+    hasBin: true
     resolution:
       integrity: sha512-O2v52ffjLa9VeM43J4XocZE//WT9N0IiwDa3KSHH7Tu8CtH+1qM8SIZvnsTh6v+4yFy5KUY3BHUVwjpfAWsjIA==
   /js-yaml/3.6.1:
@@ -1594,6 +1604,7 @@ packages:
       argparse: 1.0.10
       esprima: 2.7.3
     dev: true
+    hasBin: true
     resolution:
       integrity: sha1-bl/mfYsgXOTSL60Ft3geja3MSzA=
   /jsbn/0.1.1:
@@ -1790,12 +1801,14 @@ packages:
       integrity: sha512-lc/aahn+t4/SWV/qcmumYjymLsWfN3ELhpmVuUFjgsORruuZPVSwAQryq+HHGvO/SI2KVX26bx+En+zhM8g8hQ==
   /mime/1.4.1:
     dev: false
+    hasBin: true
     resolution:
       integrity: sha512-KI1+qOZu5DcW6wayYHSzR/tXKCDC5Om4s1z2QJjDULzLcmf3DvzS7oluY4HCTrc+9FiKmWUgeNLg7W3uIQvxtQ==
   /mime/2.2.0:
     dev: false
     engines:
       node: '>=6.0.0'
+    hasBin: true
     resolution:
       integrity: sha512-0Qz9uF1ATtl8RKJG4VRfOymh7PyEor6NbrI/61lRfuRe4vx9SNATrvAeTj2EWVRKjEQGskrzWkJBBY5NbaVHIA==
   /minimatch/3.0.4:
@@ -1815,6 +1828,7 @@ packages:
     dependencies:
       minimist: 0.0.8
     dev: true
+    hasBin: true
     resolution:
       integrity: sha1-MAV0OOrGz3+MR2fzhkjWaX11yQM=
   /modelo/4.2.3:
@@ -1897,6 +1911,7 @@ packages:
       - yargs
       - yargs-parser
     dev: true
+    hasBin: true
     resolution:
       integrity: sha512-5eCZpvaksFVjP2rt1r60cfXmt3MUtsQDw8bAzNqNEr4WLvUMLgiVENMf/B9bE9YAX0mGVvaGA3v9IS9ekNqB1Q==
   /oauth-sign/0.8.2:
@@ -1943,6 +1958,7 @@ packages:
       integrity: sha1-WDsap3WWHUsROsF9nFC6753Xa9E=
   /opener/1.4.3:
     dev: true
+    hasBin: true
     resolution:
       integrity: sha1-XG2ixdflgx6P+jlklQ+NZnSskLg=
   /options/0.0.6:
@@ -2118,6 +2134,7 @@ packages:
     dev: false
     engines:
       node: '>=4'
+    hasBin: true
     resolution:
       integrity: sha512-T/KD65Ot0PB97xTrG8afQ46x3oiVhnfGjGESSI9NWYcG92+OUPZKkwHqGWXH2t9jK1crnQjubECW0FuOth+hxw==
   /process-nextick-args/2.0.0:
@@ -2138,6 +2155,7 @@ packages:
     dev: false
     engines:
       node: '>=0.8'
+    hasBin: true
     resolution:
       integrity: sha1-WXSNfc8D0tsiwT2p/rAk4Wq4DJE=
   /protobufjs/6.8.6:
@@ -2156,6 +2174,8 @@ packages:
       '@types/node': 8.9.4
       long: 4.0.0
     dev: false
+    hasBin: true
+    requiresBuild: true
     resolution:
       integrity: sha512-eH2OTP9s55vojr3b7NBaF9i4WhWPkv/nq55nznWNp/FomKrLViprUcqnBjHph2tFQ+7KciGPTPsVWGz0SOhL0Q==
   /proxy-addr/2.0.3:
@@ -2375,6 +2395,7 @@ packages:
     dependencies:
       glob: 7.1.2
     dev: false
+    hasBin: true
     resolution:
       integrity: sha512-lreewLK/BlghmxtfH36YYVg1i8IAce4TI7oao75I1g245+6BctqTVQiBP3YUJ9C6DQOXJmkYR9X9fCLtCOJc5w==
   /safe-buffer/5.1.1:
@@ -2511,6 +2532,7 @@ packages:
       getpass: 0.1.7
     engines:
       node: '>=0.10.0'
+    hasBin: true
     optionalDependencies:
       bcrypt-pbkdf: 1.0.1
       ecc-jsbn: 0.1.1
@@ -2619,6 +2641,7 @@ packages:
       tap-parser: 5.4.0
       unicode-length: 1.0.3
     dev: true
+    hasBin: true
     optionalDependencies:
       readable-stream: 2.3.4
     resolution:
@@ -2628,6 +2651,7 @@ packages:
       events-to-array: 1.1.2
       js-yaml: 3.10.0
     dev: true
+    hasBin: true
     optionalDependencies:
       readable-stream: 2.3.4
     resolution:
@@ -2663,6 +2687,7 @@ packages:
     dev: true
     engines:
       node: '>=0.8'
+    hasBin: true
     resolution:
       integrity: sha512-oS/FIq+tcmxVgYn5usKtLsX+sOHNEj+G7JIQE9SBjO5mVYB1rbaEJJiDbnYp8k0ZqY2Pe4HbYEpkvzm9jfLDyw==
   /through2/2.0.3:
@@ -2791,6 +2816,7 @@ packages:
     resolution:
       integrity: sha1-n5VxD1CiZ5R7LMwSR0HBAoQn5xM=
   /uuid/3.2.1:
+    hasBin: true
     resolution:
       integrity: sha512-jZnMwlb9Iku/O3smGWvZhauCf6cvvpKi4BKRiliS3cxnI+Gz9j5MEpTz2UFuXiKPJocb7gnsLHwiS05ige5BEA==
   /vary/1.1.2:
@@ -2827,12 +2853,14 @@ packages:
     dependencies:
       isexe: 2.0.0
     dev: true
+    hasBin: true
     resolution:
       integrity: sha512-xcJpopdamTuY5duC/KnTTNBraPK54YwpenP4lzxU8H91GudWpFv38u0CKjclE1Wi2EH2EDz5LRcHcKbCIzqGyg==
   /window-size/0.1.4:
     dev: false
     engines:
       node: '>= 0.10.0'
+    hasBin: true
     resolution:
       integrity: sha1-+OGqHuWlPsW/FR/6CXQqatdpeHY=
   /wrap-ansi/2.1.0:
@@ -2918,7 +2946,7 @@ packages:
     resolution:
       integrity: sha1-AwiOnr+edWtpdRYR0qXvWRSCyZU=
 registry: 'https://registry.npmjs.org/'
-shrinkwrapMinorVersion: 4
+shrinkwrapMinorVersion: 9
 shrinkwrapVersion: 3
 specifiers:
   beepboop-botkit: ^1.4.1
