@@ -1,13 +1,15 @@
 const Slapp = require('slapp');
 const ConvoStore = require('slapp-convo-beepboop');
 const BeepBoopContext = require('slapp-context-beepboop');
+const Context = require('./beepboop/context.js');
 const Express = require('express');
+const db = require('./lib/db.js')();
 
 var port = process.env.PORT || 8080;
 
 var slapp = Slapp({
     convo_store: ConvoStore(),
-    context: BeepBoopContext(),
+    context: Context(db),
     log: true,
     colors: true
 });
