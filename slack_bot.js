@@ -151,7 +151,13 @@ slapp.command('/uno', '^renamebot (.+?) (.+?)', async function(msg, text, botNam
     unoGame.renameAiPlayer(msg, game, botName, newName);
 });
 
-var server = slapp.attachToExpress(Express());
+var app = Express();
+
+app.get('/', function(req, res){
+  res.send('How can I help?');
+});
+
+var server = slapp.attachToExpress(app);
 
 // start http server
 server.listen(port, (err) => {
